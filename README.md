@@ -1,5 +1,10 @@
 # Drape
 
+To run on local computer:
+1. Download code
+2. Opening index.html will run code without textures. To get textures, you need to run files from a local server (instructions [here](https://help.github.com/articles/adding-an-existing-project-to-github-using-the-command-line/)). Alternatively, download the [p5 editor](http://p5js.org/download/) and open and run the code.
+
+TODO
 1. ~~Fork three.js cloth simulation example~~
 2. Add ability to apply forces to edges
 3. Model shear & bending stiffness (try out different models for bending stiffness)
