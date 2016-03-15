@@ -1,5 +1,5 @@
 # Drape
-A fabric design and simulation tool. Built in three js starting from the [cloth simulation](http://threejs.org/examples/webgl_animation_cloth) example.
+A fabric design and simulation tool. Built in [three.js](http://threejs.org/) starting from the [cloth simulation](http://threejs.org/examples/webgl_animation_cloth) example.
 
 ## To run on local computer:
 
