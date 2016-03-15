@@ -4,7 +4,7 @@ A fabric design and simulation tool. Built in [three.js](http://threejs.org/) st
 ## To run on local computer:
 
 1. Download code
-2. Opening index.html will run code without textures. To get textures, you need to run files from a local server (instructions [here](https://help.github.com/articles/adding-an-existing-project-to-github-using-the-command-line/)). Alternatively, download the [p5 editor](http://p5js.org/download/) and open and run the code.
+2. Opening index.html runs the simulator without textures. To get textures to work, you need to run the code from a local server (instructions [here](https://help.github.com/articles/adding-an-existing-project-to-github-using-the-command-line/)). Alternatively, a simple solution is to run the code using the [p5 editor](http://p5js.org/download/).
 
 ## TODO
 
