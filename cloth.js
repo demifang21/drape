@@ -15,13 +15,14 @@
 var DAMPING = 0.03;
 var DRAG = 1 - DAMPING;
 var MASS = .1;
-var restDistance = 50; // sets the size of the cloth
+var restDistance = 20; // sets the size of the cloth
+var springStiffness = 1; // number between 0 and 1. smaller = springier, bigger = stiffer
 
 
-var xSegs = 10; // how many particles wide is the cloth
-var ySegs = 10; // how many particles tall is the cloth
+var xSegs = 20; // how many particles wide is the cloth
+var ySegs = 20; // how many particles tall is the cloth
 
-var clothInitialPosition = plane( restDistance * xSegs, restDistance * ySegs );
+var clothInitialPosition = plane( 500, 500 );
 
 var cloth = new Cloth( xSegs, ySegs );
 
@@ -32,15 +33,15 @@ var gravity = new THREE.Vector3( 0, - GRAVITY, 0 ).multiplyScalar( MASS );
 var TIMESTEP = 18 / 1000;
 var TIMESTEP_SQ = TIMESTEP * TIMESTEP;
 
-var pins = [];
-
+//var pins = [];
+var pinned = true;
 
 var wind = true;
 var windStrength = 2;
 var windForce = new THREE.Vector3( 0, 0, 0 );
 
-var ballPosition = new THREE.Vector3( 0, 0, 0 );
-var ballSize = restDistance*xSegs/4; //40
+var ballSize = 500/4; //40
+var ballPosition = new THREE.Vector3( 0, -250+ballSize, 0 );
 var ballPositionOffset;
 
 var tmpForce = new THREE.Vector3();
@@ -118,12 +119,12 @@ Particle.prototype.integrate = function( timesq ) {
 
 var diff = new THREE.Vector3();
 
-function satisifyConstrains( p1, p2, distance ) {
+function satisifyConstrains( p1, p2, distance, stiffness ) {
 
   diff.subVectors( p2.position, p1.position );
   var currentDist = diff.length();
   if ( currentDist == 0 ) return; // prevents division by 0
-  var correction = diff.multiplyScalar( 1 - distance / currentDist );
+  var correction = diff.multiplyScalar( stiffness*(currentDist - distance) / currentDist);
   var correctionHalf = correction.multiplyScalar( 0.5 );
   p1.position.add( correctionHalf );
   p2.position.sub( correctionHalf );
@@ -165,13 +166,15 @@ function Cloth( w, h ) {
       constrains.push( [
         particles[ index( u, v ) ],
         particles[ index( u, v + 1 ) ],
-        restDistance
+        restDistance,
+        springStiffness
       ] );
 
       constrains.push( [
         particles[ index( u, v ) ],
         particles[ index( u + 1, v ) ],
-        restDistance
+        restDistance,
+        springStiffness
       ] );
 
     }
@@ -183,8 +186,8 @@ function Cloth( w, h ) {
     constrains.push( [
       particles[ index( u, v ) ],
       particles[ index( u, v + 1 ) ],
-      restDistance
-
+      restDistance,
+      springStiffness
     ] );
 
   }
@@ -194,7 +197,8 @@ function Cloth( w, h ) {
     constrains.push( [
       particles[ index( u, v ) ],
       particles[ index( u + 1, v ) ],
-      restDistance
+      restDistance,
+      springStiffness
     ] );
 
   }
@@ -291,7 +295,7 @@ function simulate( time ) {
   for ( i = 0; i < il; i ++ ) {
 
     constrain = constrains[ i ];
-    satisifyConstrains( constrain[ 0 ], constrain[ 1 ], constrain[ 2 ] );
+    satisifyConstrains( constrain[ 0 ], constrain[ 1 ], constrain[ 2 ], constrain[ 3] );
 
   }
 
@@ -305,7 +309,7 @@ function simulate( time ) {
 
 
   if ( sphere.visible ){
-  ballPosition.y = map(Math.sin( ((Date.now()-ballPositionOffset) / 600) - Math.PI/2 ),-1,1,-250+ballSize,250); //+ 40;
+  ballPosition.y = map(Math.sin( ((Date.now()-ballPositionOffset) / 600) - Math.PI/2 ),-1,1,-250+ballSize,0); //+ 40;
   for ( particles = cloth.particles, i = 0, il = particles.length
       ; i < il; i ++ ) {
 
@@ -329,9 +333,9 @@ function simulate( time ) {
 
     particle = particles[ i ];
     pos = particle.position;
-    if ( pos.y < - 250 ) {
+    if ( pos.y < - 249 ) {
 
-      pos.y = - 250;
+      pos.y = - 249;
 
     }
 
@@ -339,11 +343,12 @@ function simulate( time ) {
 
   // Pin Constrains
 
-  particles[cloth.index(0,0)].lock();
-  particles[cloth.index(xSegs,0)].lock();
-  particles[cloth.index(0,ySegs)].lock();
-  particles[cloth.index(xSegs,ySegs)].lock();
-
+  if(pinned){
+    particles[cloth.index(0,0)].lock();
+    particles[cloth.index(xSegs,0)].lock();
+    particles[cloth.index(0,ySegs)].lock();
+    particles[cloth.index(xSegs,ySegs)].lock();
+  }
 
 /*
   for ( i = 0, il = pins.length; i < il; i ++ ) {
