@@ -174,13 +174,13 @@ function init() {
 
 	// poles
 
-	var poleGeo = new THREE.BoxGeometry( 5, 750/2, 5 );
+	var poleGeo = new THREE.BoxGeometry( 5, 250+125, 5 );
 	var poleMat = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0x111111, shininess: 100 } );
 
 	var mesh = new THREE.Mesh( poleGeo, poleMat );
 	mesh.position.x = -250;
 	mesh.position.z = 250;
-	mesh.position.y = -62;
+	mesh.position.y = -(125-125/2);
 	mesh.receiveShadow = true;
 	mesh.castShadow = true;
 	scene.add( mesh );
@@ -188,7 +188,7 @@ function init() {
 	var mesh = new THREE.Mesh( poleGeo, poleMat );
 	mesh.position.x = 250;
 	mesh.position.z = 250;
-	mesh.position.y = -62;
+	mesh.position.y = -(125-125/2);
 	mesh.receiveShadow = true;
 	mesh.castShadow = true;
 	scene.add( mesh );
@@ -196,7 +196,7 @@ function init() {
 	var mesh = new THREE.Mesh( poleGeo, poleMat );
 	mesh.position.x = 250;
 	mesh.position.z = -250;
-	mesh.position.y = -62;
+	mesh.position.y = -(125-125/2);
 	mesh.receiveShadow = true;
 	mesh.castShadow = true;
 	scene.add( mesh );
@@ -210,12 +210,47 @@ function init() {
 	scene.add( mesh );
 
 /*
-  var mesh = new THREE.Mesh( new THREE.BoxGeometry( 255, 5, 5 ), poleMat );
-	mesh.position.y = -250 + 750/2;
+  var mesh = new THREE.Mesh( new THREE.BoxGeometry( 500, 5, 5 ), poleMat );
 	mesh.position.x = 0;
+	mesh.position.z = 250;
+	mesh.position.y = 125;
 	mesh.receiveShadow = true;
 	mesh.castShadow = true;
 	scene.add( mesh );
+
+  var mesh = new THREE.Mesh( new THREE.BoxGeometry( 500, 5, 5 ), poleMat );
+	mesh.position.x = 0;
+	mesh.position.z = -250;
+	mesh.position.y = 125;
+	mesh.receiveShadow = true;
+	mesh.castShadow = true;
+	scene.add( mesh );
+
+  var mesh = new THREE.Mesh( new THREE.BoxGeometry( 5, 5, 500 ), poleMat );
+	mesh.position.x = 250;
+	mesh.position.z = 0;
+	mesh.position.y = 125;
+	mesh.receiveShadow = true;
+	mesh.castShadow = true;
+	scene.add( mesh );
+
+  var mesh = new THREE.Mesh( new THREE.BoxGeometry( 5, 5, 500 ), poleMat );
+	mesh.position.x = -250;
+	mesh.position.z = 0;
+	mesh.position.y = 125;
+	mesh.receiveShadow = true;
+	mesh.castShadow = true;
+	scene.add( mesh );
+*/
+/*
+  var table = new THREE.Mesh( new THREE.BoxGeometry( 250, 5, 250 ), poleMat );
+	table.position.x = 0;
+	table.position.z = 0;
+	table.position.y = 0;
+	table.receiveShadow = true;
+	table.castShadow = true;
+	scene.add( table );
+*/
 
 /*
 	var gg = new THREE.BoxGeometry( 10, 10, 10 );
@@ -237,9 +272,8 @@ function init() {
 
 	window.addEventListener( 'resize', onWindowResize, false );
 
-	sphere.visible = true;
-	ballPositionOffset = Date.now();
-
+	sphere.visible = false;
+	//ballPositionOffset = Date.now();
 
 }
 
@@ -263,7 +297,12 @@ function animate() {
 	var time = Date.now();
 
 	windStrength = Math.cos( time / 7000 ) * 20 + 40;
-	windForce.set( Math.sin( time / 2000 ), Math.sin( time / 3000 ), Math.cos( time / 1000 ) ).normalize().multiplyScalar( windStrength );
+	//windForce.set( Math.sin( time / 2000 ), Math.sin( time / 3000 ), Math.cos( time / 1000 ) ).normalize().multiplyScalar( windStrength );
+	windForce.set(
+		Math.sin( time / 2000 ),
+		Math.cos( time / 3000 ),
+		Math.sin( time / 1000 )
+		).normalize().multiplyScalar( windStrength );
 
 	simulate(time); // run physics simulation to create new positions of cloth
 	render(); // update position of cloth, compute normals, rotate camera, render the scene

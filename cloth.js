@@ -16,7 +16,7 @@ var DAMPING = 0.03;
 var DRAG = 1 - DAMPING;
 var MASS = .1;
 var restDistance = 40; // sets the size of the cloth
-var springStiffness = 1; // number between 0 and 1. smaller = springier, bigger = stiffer
+var springStiffness = 0.5; // number between 0 and 1. smaller = springier, bigger = stiffer
 
 
 var xSegs = 10; // how many particles wide is the cloth
@@ -309,7 +309,7 @@ function simulate( time ) {
 
 
   if ( sphere.visible ){
-  ballPosition.y = map(Math.sin( ((Date.now()-ballPositionOffset) / 600) - Math.PI/2 ),-1,1,-250+ballSize,0); //+ 40;
+  ballPosition.y = map(Math.sin( ((Date.now()-ballPositionOffset) / 600) - Math.PI/2 ),-1,1,-250+ballSize,250); //+ 40;
   for ( particles = cloth.particles, i = 0, il = particles.length
       ; i < il; i ++ ) {
 
@@ -348,6 +348,12 @@ function simulate( time ) {
     particles[cloth.index(xSegs,0)].lock();
     particles[cloth.index(0,ySegs)].lock();
     particles[cloth.index(xSegs,ySegs)].lock();
+
+    //particles[cloth.index(xSegs/2,0)].lock();
+    //particles[cloth.index(0,ySegs/2)].lock();
+    //particles[cloth.index(xSegs/2,ySegs)].lock();
+    //particles[cloth.index(xSegs,ySegs/2)].lock();
+
   }
 
 /*
