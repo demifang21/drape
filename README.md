@@ -1,10 +1,14 @@
 # Drape
-A fabric design and simulation tool. [Test version](https://cdn.rawgit.com/aatishb/drape/master/index.html). Built in [three.js](http://threejs.org/) starting from the [cloth simulation](http://threejs.org/examples/webgl_animation_cloth) example.
+A fabric design and simulation tool, built in [three.js](http://threejs.org/) starting from the [cloth simulation](http://threejs.org/examples/webgl_animation_cloth) example.
 
-## To run on local computer:
+## To run online:
 
-1. Download code
-2. Opening index.html runs the simulator without textures. For textures to work, run the code on a local server ([instructions](https://help.github.com/articles/adding-an-existing-project-to-github-using-the-command-line/)). Alternatively, run the code using the [p5 editor](http://p5js.org/download/).
+[Test it out.](https://cdn.rawgit.com/aatishb/drape/master/index.html)
+
+## To run on your own computer:
+
+1. Download code and unzip
+2. Opening index.html runs *Drape* without textures. For textures to work, run with a local server (instructions [here](https://github.com/mrdoob/three.js/wiki/How-to-run-things-locally) or [here](https://github.com/processing/p5.js/wiki/Local-server)). Alternatively, use the [p5 editor](http://p5js.org/download/) to run `drape.js`.
 
 ## TODO
 
