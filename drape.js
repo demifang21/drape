@@ -1,33 +1,3 @@
-/* testing cloth simulation */
-
-/*
-var pinsFormation = [];
-var pins = [6];
-
-pinsFormation.push( pins );
-
-pins = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ];
-pinsFormation.push( pins );
-
-pins = [ 0 ];
-pinsFormation.push( pins );
-
-pins = []; // cut the rope ;)
-pinsFormation.push( pins );
-
-pins = [ 0, cloth.w ]; // classic 2 pins
-pinsFormation.push( pins );
-
-pins = pinsFormation[ 1 ];
-
-
-function togglePins() {
-
-	pins = pinsFormation[ ~~( Math.random() * pinsFormation.length ) ];
-
-}
-*/
-
 if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
 var container, stats;
@@ -35,8 +5,11 @@ var camera, scene, renderer;
 
 var clothGeometry;
 var sphere;
+var table;
+var table0;
 var object;
 var ballPositionOffset;
+var collidableMeshList = [];
 
 var rotate = true;
 
@@ -156,6 +129,8 @@ function init() {
 	sphere.castShadow = true;
 	sphere.receiveShadow = true;
 	scene.add( sphere );
+	collidableMeshList.push(sphere);
+
 
 	// ground
 
@@ -242,15 +217,15 @@ function init() {
 	mesh.castShadow = true;
 	scene.add( mesh );
 */
-/*
-  var table = new THREE.Mesh( new THREE.BoxGeometry( 250, 5, 250 ), poleMat );
+
+  	table = new THREE.Mesh( new THREE.BoxGeometry( 250, 5, 250 ), poleMat );
 	table.position.x = 0;
-	table.position.z = 0;
 	table.position.y = 0;
+	table.position.z = 0;
 	table.receiveShadow = true;
 	table.castShadow = true;
 	scene.add( table );
-*/
+	collidableMeshList.push(table);
 
 /*
 	var gg = new THREE.BoxGeometry( 10, 10, 10 );
@@ -272,8 +247,8 @@ function init() {
 
 	window.addEventListener( 'resize', onWindowResize, false );
 
-	sphere.visible = false;
-	//ballPositionOffset = Date.now();
+	sphere.visible = true;
+	ballPositionOffset = Date.now();
 
 }
 
