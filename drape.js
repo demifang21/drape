@@ -6,7 +6,6 @@ var camera, scene, renderer;
 var clothGeometry;
 var sphere;
 var table;
-var table0;
 var object;
 var ballPositionOffset;
 var collidableMeshList = [];
@@ -247,7 +246,7 @@ function init() {
 
 	window.addEventListener( 'resize', onWindowResize, false );
 
-	sphere.visible = true;
+	sphere.visible = false;
 	ballPositionOffset = Date.now();
 
 }
@@ -277,7 +276,7 @@ function animate() {
 		Math.sin( time / 2000 ),
 		Math.cos( time / 3000 ),
 		Math.sin( time / 1000 )
-		).normalize().multiplyScalar( windStrength );
+		).normalize().multiplyScalar( windStrength/2 );
 
 	simulate(time); // run physics simulation to create new positions of cloth
 	render(); // update position of cloth, compute normals, rotate camera, render the scene
