@@ -18,4 +18,4 @@ A fabric design and simulation tool, built in [three.js](http://threejs.org/) st
 2. Bending stiffness, shear ([Ref](http://www.uni-weimar.de/~caw/papers/p28-bridson.pdf))
 3. GUI
 4. Export to STL
-5. Explore human computer interaction possibilities
+5. Explore different methods of interaction
