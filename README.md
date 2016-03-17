@@ -3,9 +3,9 @@ A fabric design and simulation tool, built in [three.js](http://threejs.org/) st
 
 ## To run online:
 
-[Latest stable version](https://cdn.rawgit.com/aatishb/drape/master/index.html)
+[Default branch](https://cdn.rawgit.com/aatishb/drape/master/index.html) (Latest stable version)
 
-[collisiondetection branch](https://cdn.rawgit.com/aatishb/drape/collisiondetection/index.html) (A branch to develop collision detection. Currently unstable, work in progress.)
+[collisiondetection branch](https://cdn.rawgit.com/aatishb/drape/collisiondetection/index.html) (A branch to implement collision detection. Currently unstable, work in progress.)
 
 ## To run on your own computer:
 
