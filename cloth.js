@@ -36,7 +36,7 @@ var TIMESTEP_SQ = TIMESTEP * TIMESTEP;
 //var pins = [];
 var pinned = true;
 
-var wind = true;
+var wind = false;
 var windStrength = 2;
 var windForce = new THREE.Vector3( 0, 0, 0 );
 
@@ -47,6 +47,8 @@ var ballPositionOffset;
 var tmpForce = new THREE.Vector3();
 
 var lastTime;
+
+var pos;
 
 
 function createBall(){
@@ -85,11 +87,19 @@ function Particle( x, y, z, mass ) {
 
 }
 
-Particle.prototype.lock = function() {
+Particle.prototype.lockToOriginal = function() {
 
     this.position.copy( this.original );
     this.previous.copy( this.original );
 }
+
+Particle.prototype.lock = function() {
+
+    this.position.copy( this.previous );
+    this.previous.copy( this.previous );
+
+}
+
 
 // Force -> Acceleration
 Particle.prototype.addForce = function( force ) {
@@ -284,7 +294,7 @@ function simulate( time ) {
     particle = particles[ i ];
     particle.addForce( gravity );
 
-    particle.integrate( TIMESTEP_SQ );
+    particle.integrate( TIMESTEP_SQ ); // performs verlet integration
 
   }
 
@@ -299,33 +309,83 @@ function simulate( time ) {
 
   }
 
+    //ballPosition.y = map(Math.sin( ((Date.now()-ballPositionOffset) / 600) - Math.PI/2 ),-1,1,-250+ballSize,250); //+ 40;
+
+    for ( particles = cloth.particles, i = 0, il = particles.length
+        ; i < il; i ++ ) {
+
+      particle = particles[ i ];
+      var whereAmI = particle.position;
+      var whereWasI = particle.previous;
+
+      diff.subVectors(whereAmI,whereWasI);
+      var directionOfMotion = diff.clone().normalize();
+      var ray = new THREE.Raycaster( whereWasI, directionOfMotion );
+      var collisionResults = ray.intersectObjects( collidableMeshList );
+
+      for ( j = 0, jl = collisionResults.length
+          ; j < jl; j ++ ) {
+        if(collisionResults[j].distance < diff.length()){
+          //console.log("collision");
+          whereAmI.copy(whereWasI);
+          //diff.subVectors(whereWasI,collisionResults[j].point).multiplyScalar(0.99);
+          //whereAmI.addVectors(whereWasI,diff);
+        }
+      }
+
+  }
+
   // Ball Constrains
 
-  /*
-  ballPosition.z = - Math.sin( Date.now() / 600 ) * 90 ; //+ 40;
-  ballPosition.x = Math.cos( Date.now() / 400 ) * 70;
-  */
-  //ballPosition.y = -Math.sin( Date.now() / 600 ) * 90 ; //+ 40;
 
-
+/*
   if ( sphere.visible ){
-  ballPosition.y = map(Math.sin( ((Date.now()-ballPositionOffset) / 600) - Math.PI/2 ),-1,1,-250+ballSize,250); //+ 40;
-  for ( particles = cloth.particles, i = 0, il = particles.length
-      ; i < il; i ++ ) {
+    ballPosition.y = map(Math.sin( ((Date.now()-ballPositionOffset) / 600) - Math.PI/2 ),-1,1,-250+ballSize,250); //+ 40;
 
-    particle = particles[ i ];
-    pos = particle.position;
-    diff.subVectors( pos, ballPosition );
-    if ( diff.length() < ballSize ) {
 
+    for ( particles = cloth.particles, i = 0, il = particles.length
+        ; i < il; i ++ ) {
+
+      particle = particles[ i ];
+
+      pos = particle.position;
+      diff.subVectors( pos, ballPosition );
+      if ( diff.length() < ballSize ) {
       // collided
       diff.normalize().multiplyScalar( ballSize );
       pos.copy( ballPosition ).add( diff );
 
+      }
+
     }
 
   }
+
+
+ if ( table.visible ){
+
+    for ( particles = cloth.particles, i = 0, il = particles.length
+        ; i < il; i ++ ) {
+
+      particle = particles[ i ];
+
+      pos = particle.position;
+
+
+      if ( table0.containsPoint(pos) ) {
+
+      // collided
+      //console.log("collision " + time);
+      diff.subVectors( pos, table.position ).normalize();
+      var ray = new THREE.Raycaster(table.position, diff);
+      var rectDist = ray.intersectObject(table).distance;
+      pos.copy( particle.tmp );
+      }
+    }
+
   }
+
+*/
 
   // Floor Constains
   for ( particles = cloth.particles, i = 0, il = particles.length
@@ -344,15 +404,15 @@ function simulate( time ) {
   // Pin Constrains
 
   if(pinned){
-    particles[cloth.index(0,0)].lock();
-    particles[cloth.index(xSegs,0)].lock();
-    particles[cloth.index(0,ySegs)].lock();
-    particles[cloth.index(xSegs,ySegs)].lock();
+    particles[cloth.index(0,0)].lockToOriginal();
+    particles[cloth.index(xSegs,0)].lockToOriginal();
+    particles[cloth.index(0,ySegs)].lockToOriginal();
+    particles[cloth.index(xSegs,ySegs)].lockToOriginal();
 
-    //particles[cloth.index(xSegs/2,0)].lock();
-    //particles[cloth.index(0,ySegs/2)].lock();
-    //particles[cloth.index(xSegs/2,ySegs)].lock();
-    //particles[cloth.index(xSegs,ySegs/2)].lock();
+    //particles[cloth.index(xSegs/2,0)].lockToOriginal();
+    //particles[cloth.index(0,ySegs/2)].lockToOriginal();
+    //particles[cloth.index(xSegs/2,ySegs)].lockToOriginal();
+    //particles[cloth.index(xSegs,ySegs/2)].lockToOriginal();
 
   }
 
