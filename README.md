@@ -12,8 +12,8 @@ A fabric design and simulation tool, built in [three.js](http://threejs.org/) st
 
 ## TODO
 
-1. Collision detection
-2. Bending stiffness, shear
+1. Collision detection ([Ref 1](https://scholar.google.com/scholar?cites=1975214025279575923&as_sdt=5,31&sciodt=0,31&hl=en), [Ref 2](https://graphics.stanford.edu/~mdfisher/cloth.html))
+2. Bending stiffness, shear ([Ref](http://www.uni-weimar.de/~caw/papers/p28-bridson.pdf))
 3. GUI
 4. Export to STL
 5. Explore human computer interaction possibilities
