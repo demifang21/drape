@@ -225,7 +225,7 @@ function init() {
 	table.receiveShadow = true;
 	table.castShadow = true;
 	scene.add( table );
-	//collidableMeshList.push(table);
+	collidableMeshList.push(table);
 
 /*
 	var gg = new THREE.BoxGeometry( 10, 10, 10 );
