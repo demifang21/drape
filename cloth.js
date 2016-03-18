@@ -34,7 +34,7 @@ var TIMESTEP = 18 / 1000;
 var TIMESTEP_SQ = TIMESTEP * TIMESTEP;
 
 //var pins = [];
-var pinned = true;
+var pinned = false;
 
 var wind = true;
 var windStrength = 2;
@@ -309,7 +309,7 @@ function simulate( time ) {
 
   }
 
-    //ballPosition.y = map(Math.sin( ((Date.now()-ballPositionOffset) / 600) - Math.PI/2 ),-1,1,-250+ballSize,250); //+ 40;
+    ballPosition.y = map(Math.sin( ((Date.now()-ballPositionOffset) / 600) - Math.PI/2 ),-1,1,-250+ballSize,250); //+ 40;
 
     for ( particles = cloth.particles, i = 0, il = particles.length
         ; i < il; i ++ ) {
@@ -325,6 +325,7 @@ function simulate( time ) {
 
       for ( j = 0, jl = collisionResults.length
           ; j < jl; j ++ ) {
+
         if(collisionResults[j].distance < diff.length()){
           //console.log("collision");
           whereAmI.copy(whereWasI);

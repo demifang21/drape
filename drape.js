@@ -223,6 +223,8 @@ function init() {
 	table.position.z = 0;
 	table.receiveShadow = true;
 	table.castShadow = true;
+	table.side = THREE.DoubleSide,
+
 	scene.add( table );
 	collidableMeshList.push(table);
 
