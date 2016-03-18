@@ -1,33 +1,3 @@
-/* testing cloth simulation */
-
-/*
-var pinsFormation = [];
-var pins = [6];
-
-pinsFormation.push( pins );
-
-pins = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ];
-pinsFormation.push( pins );
-
-pins = [ 0 ];
-pinsFormation.push( pins );
-
-pins = []; // cut the rope ;)
-pinsFormation.push( pins );
-
-pins = [ 0, cloth.w ]; // classic 2 pins
-pinsFormation.push( pins );
-
-pins = pinsFormation[ 1 ];
-
-
-function togglePins() {
-
-	pins = pinsFormation[ ~~( Math.random() * pinsFormation.length ) ];
-
-}
-*/
-
 if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
 var container, stats;
