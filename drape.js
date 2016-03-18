@@ -122,11 +122,12 @@ function init() {
 	// sphere
 
 	var ballGeo = new THREE.SphereGeometry( ballSize, 20, 20 );
-	var ballMaterial = new THREE.MeshPhongMaterial( { color: 0xaaaaaa } );
+	var ballMaterial = new THREE.MeshPhongMaterial( { color: 0xaaaaaa, side: THREE.DoubleSide} );
 
 	sphere = new THREE.Mesh( ballGeo, ballMaterial );
 	sphere.castShadow = true;
 	sphere.receiveShadow = true;
+	sphere.side = THREE.DoubleSide,
 	scene.add( sphere );
 	collidableMeshList.push(sphere);
 
@@ -149,7 +150,7 @@ function init() {
 	// poles
 
 	var poleGeo = new THREE.BoxGeometry( 5, 250+125, 5 );
-	var poleMat = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0x111111, shininess: 100 } );
+	var poleMat = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0x111111, shininess: 100, side: THREE.DoubleSide } );
 
 	var mesh = new THREE.Mesh( poleGeo, poleMat );
 	mesh.position.x = -250;
@@ -223,10 +224,8 @@ function init() {
 	table.position.z = 0;
 	table.receiveShadow = true;
 	table.castShadow = true;
-	table.side = THREE.DoubleSide,
-
 	scene.add( table );
-	collidableMeshList.push(table);
+	//collidableMeshList.push(table);
 
 /*
 	var gg = new THREE.BoxGeometry( 10, 10, 10 );
@@ -248,7 +247,7 @@ function init() {
 
 	window.addEventListener( 'resize', onWindowResize, false );
 
-	sphere.visible = false;
+	sphere.visible = true;
 	ballPositionOffset = Date.now();
 
 }

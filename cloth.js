@@ -15,12 +15,12 @@
 var DAMPING = 0.03;
 var DRAG = 1 - DAMPING;
 var MASS = .1;
-var restDistance = 40; // sets the size of the cloth
+var restDistance = 50; // sets the size of the cloth
 var springStiffness = 0.5; // number between 0 and 1. smaller = springier, bigger = stiffer
 
 
-var xSegs = 15; // how many particles wide is the cloth
-var ySegs = 15; // how many particles tall is the cloth
+var xSegs = 10; // how many particles wide is the cloth
+var ySegs = 10; // how many particles tall is the cloth
 
 var clothInitialPosition = plane( 500, 500 );
 
@@ -323,15 +323,39 @@ function simulate( time ) {
       var ray = new THREE.Raycaster( whereWasI, directionOfMotion );
       var collisionResults = ray.intersectObjects( collidableMeshList );
 
-      for ( j = 0, jl = collisionResults.length
-          ; j < jl; j ++ ) {
 
-        if(collisionResults[j].distance < diff.length()){
+      if(collisionResults.length > 0){
+
+        // if collisionsResults is odd length, it means we're already inside an object
+        // if distance to collision is less than the distance covered in this frame,
+        // then we're about to collide
+
+        if(collisionResults.length % 2 == 1 || collisionResults[0].distance < diff.length()){
+          //console.log("stuck inside " + time);
+          if(sphere.visible && collisionResults[0].object == sphere){
+              //console.log("inside sphere");
+              diff.subVectors( whereAmI, ballPosition );
+              diff.normalize().multiplyScalar( ballSize );
+              whereAmI.copy( ballPosition ).add( diff );
+          }
+
+            if(table.visible && collisionResults[0].object == table){
+              //console.log("inside box");
+              whereAmI.copy(whereWasI); // seems to be an infinite friction / stickiness model
+              //whereAmI.copy(collisionResults[0].point);
+              //whereAmI.y = whereWasI.y;
+              //whereAmI.y = table.position.y+2.5;
+              //diff.subVectors(whereWasI,collisionResults[0].point).multiplyScalar(1.01);
+              //whereAmI.addVectors(whereWasI,diff);
+
+            }
+        }
+
+//        if(collisionResults[0].distance < diff.length()){
           //console.log("collision");
-          whereAmI.copy(whereWasI);
           //diff.subVectors(whereWasI,collisionResults[j].point).multiplyScalar(0.99);
           //whereAmI.addVectors(whereWasI,diff);
-        }
+//        }
       }
 
   }
