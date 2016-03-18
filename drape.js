@@ -247,9 +247,10 @@ function init() {
 
 	window.addEventListener( 'resize', onWindowResize, false );
 
-	sphere.visible = true;
+	sphere.visible = false;
 	ballPositionOffset = Date.now();
 
+	table.visible = true;
 }
 
 //
