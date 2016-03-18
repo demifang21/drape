@@ -15,12 +15,12 @@
 var DAMPING = 0.03;
 var DRAG = 1 - DAMPING;
 var MASS = .1;
-var restDistance = 30; // sets the size of the cloth
+var restDistance = 40; // sets the size of the cloth
 var springStiffness = 0.5; // number between 0 and 1. smaller = springier, bigger = stiffer
 
 
-var xSegs = 20; // how many particles wide is the cloth
-var ySegs = 20; // how many particles tall is the cloth
+var xSegs = 15; // how many particles wide is the cloth
+var ySegs = 15; // how many particles tall is the cloth
 
 var clothInitialPosition = plane( 500, 500 );
 
