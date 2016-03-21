@@ -10,8 +10,8 @@ You can test the code at the following links:
 
 ## To run on your own computer:
 
-1. Download code and unzip (or if you're familiar with git, `git clone https://github.com/aatishb/drape.git`) 
-2. Easiest way to run: Open one of the .js files with the [p5 editor](http://p5js.org/download/) and press play. Alternatively: run the code with a local server (instructions [here](https://github.com/mrdoob/three.js/wiki/How-to-run-things-locally) or [here](https://github.com/processing/p5.js/wiki/Local-server)).
+1. Download code and unzip (or, if you're familiar with git, `git clone https://github.com/aatishb/drape.git`) 
+2. You need to run the code on a local server (Refs: [1](https://github.com/mrdoob/three.js/wiki/How-to-run-things-locally), [2](https://github.com/processing/p5.js/wiki/Local-server)). The easiest way to do this is open one of the .js files with the [p5 editor](http://p5js.org/download/) and press play.
 
 ## TODO
 
