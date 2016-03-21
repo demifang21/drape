@@ -9,8 +9,9 @@ A fabric design and simulation tool, built in [three.js](http://threejs.org/) st
 
 ## To run on your own computer:
 
-1. Download code and unzip
-2. Opening index.html runs code without textures. For textures to work, run with a local server (instructions [here](https://github.com/mrdoob/three.js/wiki/How-to-run-things-locally) or [here](https://github.com/processing/p5.js/wiki/Local-server)). Alternatively, use the [p5 editor](http://p5js.org/download/) to run.
+1. [Download code](https://github.com/aatishb/drape/archive/master.zip) and unzip
+2. Easiest way to run: Open one of the .js files with the [p5 editor](http://p5js.org/download/) and press play
+3. Alternatively, run the code with a local server (instructions [here](https://github.com/mrdoob/three.js/wiki/How-to-run-things-locally) or [here](https://github.com/processing/p5.js/wiki/Local-server)).
 
 ## TODO
 
