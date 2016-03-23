@@ -15,8 +15,9 @@
 var DAMPING = 0.03;
 var DRAG = 1 - DAMPING;
 var MASS = .1;
-var restDistance = 50; // sets the size of the cloth
-var springStiffness = 0.5; // number between 0 and 1. smaller = springier, bigger = stiffer
+var restDistance = 60; // sets the size of the cloth
+var springStiffness = 1; // number between 0 and 1. smaller = springier, bigger = stiffer
+var friction = 0.9; // similar to coefficient of friction. 0 = frictionless, 1 = cloth sticks in place
 
 
 var xSegs = 10; // how many particles wide is the cloth
@@ -50,10 +51,43 @@ var lastTime;
 
 var pos;
 
+var ray = new THREE.Raycaster();
+var collisionResults, newCollisionResults;
+var whereAmI, whereWasI, directionOfMotion;
+
+var newPosition = new THREE.Vector3( 0, 0, 0 );
+var oldPosition = new THREE.Vector3( 0, 0, 0 );
+
 
 function createBall(){
   sphere.visible = !sphere.visible;
   ballPositionOffset = Date.now();
+  if(sphere.visible){
+    collidableMeshList.push(sphere);
+  }
+  else{
+    var i = collidableMeshList.indexOf(sphere);
+    collidableMeshList.splice(i, 1);
+  }
+}
+
+function createTable(){
+  table.visible = !table.visible;
+  if(table.visible){
+    collidableMeshList.push(table);
+  }
+  else{
+    var i = collidableMeshList.indexOf(table);
+    collidableMeshList.splice(i, 1);
+  }
+}
+
+function wireFrame(){
+
+  poleMat.wireframe = !poleMat.wireframe;
+  clothMaterial.wireframe = !clothMaterial.wireframe;
+  ballMaterial.wireframe = !ballMaterial.wireframe;
+
 }
 
 function plane( width, height ) {
@@ -128,6 +162,7 @@ Particle.prototype.integrate = function( timesq ) {
 
 
 var diff = new THREE.Vector3();
+var newPosition = new THREE.Vector3();
 
 function satisifyConstrains( p1, p2, distance, stiffness ) {
 
@@ -218,7 +253,8 @@ function Cloth( w, h ) {
   // the relax constrains model seem to be just fine
   // using structural springs.
   // Shear
-  /*
+
+// /*
    var diagonalDist = Math.sqrt(restDistance * restDistance * 2);
 
 
@@ -228,18 +264,72 @@ function Cloth( w, h ) {
       constrains.push([
         particles[index(u, v)],
         particles[index(u+1, v+1)],
-        diagonalDist
+        diagonalDist,
+        springStiffness
       ]);
 
       constrains.push([
         particles[index(u+1, v)],
         particles[index(u, v+1)],
-        diagonalDist
+        diagonalDist,
+        springStiffness
       ]);
 
     }
    }
-  */
+// */
+
+
+
+// Bending springs
+
+  for ( v = 0; v < h-1; v ++ ) {
+
+    for ( u = 0; u < w-1; u ++ ) {
+
+      constrains.push( [
+        particles[ index( u, v ) ],
+        particles[ index( u, v + 2 ) ],
+        2*restDistance,
+        springStiffness
+      ] );
+
+      constrains.push( [
+        particles[ index( u, v ) ],
+        particles[ index( u + 2, v ) ],
+        2*restDistance,
+        springStiffness
+      ] );
+
+    }
+
+  }
+
+  for ( u = w, v = 0; v < h-1; v ++ ) {
+
+    constrains.push( [
+      particles[ index( u, v ) ],
+      particles[ index( u, v + 2 ) ],
+      2*restDistance,
+      springStiffness
+    ] );
+
+  }
+
+  for ( v = h, u = 0; u < w-1; u ++ ) {
+
+    constrains.push( [
+      particles[ index( u, v ) ],
+      particles[ index( u + 2, v ) ],
+      2*restDistance,
+      springStiffness
+    ] );
+
+  }
+
+
+
+
 
   this.particles = particles;
   this.constrains = constrains;
@@ -309,108 +399,65 @@ function simulate( time ) {
 
   }
 
-    ballPosition.y = map(Math.sin( ((Date.now()-ballPositionOffset) / 600) - Math.PI/2 ),-1,1,-250+ballSize,250); //+ 40;
+    //ballPosition.y = map(Math.sin( ((Date.now()-ballPositionOffset) / 600) - Math.PI/2 ),-1,1,-250+ballSize,250); //+ 40;
+    //sphere.position.copy( ballPosition );
 
     for ( particles = cloth.particles, i = 0, il = particles.length
         ; i < il; i ++ ) {
 
       particle = particles[ i ];
-      var whereAmI = particle.position;
-      var whereWasI = particle.previous;
+      whereAmI = particle.position;
+      whereWasI = particle.previous;
 
       diff.subVectors(whereAmI,whereWasI);
-      var directionOfMotion = diff.clone().normalize();
-      var ray = new THREE.Raycaster( whereWasI, directionOfMotion );
-      var collisionResults = ray.intersectObjects( collidableMeshList );
+      directionOfMotion = diff.clone().normalize();
+
+      ray.set(whereWasI, directionOfMotion); // set origin and direction of a ray
+      collisionResults = ray.intersectObjects( collidableMeshList ); // calculate intersections of this ray with stuff
 
 
       if(collisionResults.length > 0){
 
-        // if collisionsResults is odd length, it means we're already inside an object
-        // if distance to collision is less than the distance covered in this frame,
-        // then we're about to collide
 
-        if(collisionResults.length % 2 == 1 || collisionResults[0].distance < diff.length()){
-          //console.log("stuck inside " + time);
-          if(sphere.visible && collisionResults[0].object == sphere){
-              //console.log("inside sphere");
-              diff.subVectors( whereAmI, ballPosition );
-              diff.normalize().multiplyScalar( ballSize );
-              whereAmI.copy( ballPosition ).add( diff );
+        // if distance to collision is less than distance covered in this frame
+        // we're about to collide
+
+        if(collisionResults[0].distance < diff.length()){
+
+          ray.set(whereAmI, collisionResults[0].face.normal);
+          newCollisionResults = ray.intersectObjects( [collisionResults[0].object] );
+
+          // take appropriate action to avoid collision
+          if(newCollisionResults.length>0){
+            diff.subVectors( newCollisionResults[0].point, collisionResults[0].object.position );
+            diff.multiplyScalar( 1 + Math.pow(10,-3));
+            newPosition.copy(collisionResults[0].object.position).add( diff ).multiplyScalar(1-friction);
+            if(whereWasI.distanceTo(newPosition) > -1){
+              oldPosition.copy(whereWasI).multiplyScalar(friction);
+              whereAmI.addVectors(newPosition,oldPosition);
+            }
+            else{
+              whereAmI.copy(newPosition);
+            }
           }
 
-            if(table.visible && collisionResults[0].object == table){
-              //console.log("inside box");
-              whereAmI.copy(whereWasI); // seems to be an infinite friction / stickiness model
-              //whereAmI.copy(collisionResults[0].point);
-              //whereAmI.y = whereWasI.y;
-              //whereAmI.y = table.position.y+2.5;
-              //diff.subVectors(whereWasI,collisionResults[0].point).multiplyScalar(1.01);
-              //whereAmI.addVectors(whereWasI,diff);
 
-            }
+          // if the ray being cast intersects objects an odd numner of times
+          // it means we're already inside an object
+          // i.e. we've already collided in the past. So take appropriate action
+
+          else if(collisionResults.length % 2 == 1){
+             //console.log("particle "+i+ " is struck inside an object at time " + time);
+            // may want to add some correcting behavior here
+          }
+
+
         }
 
-//        if(collisionResults[0].distance < diff.length()){
-          //console.log("collision");
-          //diff.subVectors(whereWasI,collisionResults[j].point).multiplyScalar(0.99);
-          //whereAmI.addVectors(whereWasI,diff);
-//        }
       }
 
   }
 
-  // Ball Constrains
-
-
-/*
-  if ( sphere.visible ){
-    ballPosition.y = map(Math.sin( ((Date.now()-ballPositionOffset) / 600) - Math.PI/2 ),-1,1,-250+ballSize,250); //+ 40;
-
-
-    for ( particles = cloth.particles, i = 0, il = particles.length
-        ; i < il; i ++ ) {
-
-      particle = particles[ i ];
-
-      pos = particle.position;
-      diff.subVectors( pos, ballPosition );
-      if ( diff.length() < ballSize ) {
-      // collided
-      diff.normalize().multiplyScalar( ballSize );
-      pos.copy( ballPosition ).add( diff );
-
-      }
-
-    }
-
-  }
-
-
- if ( table.visible ){
-
-    for ( particles = cloth.particles, i = 0, il = particles.length
-        ; i < il; i ++ ) {
-
-      particle = particles[ i ];
-
-      pos = particle.position;
-
-
-      if ( table0.containsPoint(pos) ) {
-
-      // collided
-      //console.log("collision " + time);
-      diff.subVectors( pos, table.position ).normalize();
-      var ray = new THREE.Raycaster(table.position, diff);
-      var rectDist = ray.intersectObject(table).distance;
-      pos.copy( particle.tmp );
-      }
-    }
-
-  }
-
-*/
 
   // Floor Constains
   for ( particles = cloth.particles, i = 0, il = particles.length
