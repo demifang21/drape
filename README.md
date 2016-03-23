@@ -20,9 +20,17 @@ You can test the code at the following links:
 
 Stuff to implement:
 
-1. Collision detection ([Ref 1](https://scholar.google.com/scholar?cites=1975214025279575923&as_sdt=5,31&sciodt=0,31&hl=en), [Ref 2](https://graphics.stanford.edu/~mdfisher/cloth.html))
-2. Bending stiffness, shear ([Ref](http://www.uni-weimar.de/~caw/papers/p28-bridson.pdf))
+1. ~~Collision detection~~
+2. ~~Bending stiffness, shear~~
 3. Prevent cloth self-intersections
 4. GUI
 5. Export to STL
 6. Explore different methods of interaction
+
+## References
+
+1. [GPU Ray-Traced Collision Detection for Cloth Simulation](https://hal.inria.fr/hal-01218186/document) (2015)
+2. [Ray-traced collision detection for deformable bodies](https://hal.inria.fr/file/index/docid/319404/filename/grapp08.pdf) (2008)
+3. [Untangling Cloth](http://graphics.pixar.com/library/UntanglingCloth/paper.pdf) (2003)
+4. [Simulation of Clothing with Folds and Wrinkles] (https://graphics.stanford.edu/papers/cloth2003/cloth.pdf) (2003)
+5. [Robust Treatment of Collisions, Contact and Friction for Cloth Animation](http://accad.osu.edu/~elaine/intrACCAD/cara/cloth/papers/2002-Bridson.pdf) (2002)
