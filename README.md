@@ -4,9 +4,9 @@ A fabric design and simulation tool, built in [three.js](http://threejs.org/) st
 ## To run online:
 You can test the code at the following links:
 
-[Latest version](https://gitcdn.xyz/repo/aatishb/drape/master/index.html) (added shear & bending springs, detects collisions with arbitrary objects + friction)
+[Latest version](https://gitcdn.xyz/repo/aatishb/drape/master/index.html) (added shear & bending springs, collision detection, friction, wireframe view)
 
-[Earlier version](https://gitcdn.xyz/repo/aatishb/drape/initial/index.html) (no shear or bending springs, only detects collisions with sphere)
+[Earlier version](https://gitcdn.xyz/repo/aatishb/drape/initial/index.html)
 
 ## To run on your own computer:
 
