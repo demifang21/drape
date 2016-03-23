@@ -5,10 +5,14 @@ var camera, scene, renderer;
 
 var clothGeometry;
 var sphere;
+var table;
 var object;
 var ballPositionOffset;
+var collidableMeshList = [];
 
 var rotate = true;
+
+var poleMat, clothMaterial,ballMaterial;
 
 init();
 animate();
@@ -78,6 +82,7 @@ function init() {
 
 	scene.add( light );
 
+
 	// cloth material
 
 	var loader = new THREE.TextureLoader();
@@ -85,8 +90,9 @@ function init() {
 	clothTexture.wrapS = clothTexture.wrapT = THREE.RepeatWrapping;
 	clothTexture.anisotropy = 16;
 
-	var clothMaterial = new THREE.MeshPhongMaterial( {
+	clothMaterial = new THREE.MeshPhongMaterial( {
 		specular: 0x030303,
+		wireframeLinewidth: 2,
 		map: clothTexture,
 		side: THREE.DoubleSide,
 		alphaTest: 0.5
@@ -120,7 +126,7 @@ function init() {
 	// sphere
 
 	var ballGeo = new THREE.SphereGeometry( ballSize, 20, 20 );
-	var ballMaterial = new THREE.MeshPhongMaterial( { color: 0xaaaaaa } );
+	ballMaterial = new THREE.MeshPhongMaterial( { color: 0xaaaaaa, side: THREE.DoubleSide} );
 
 	sphere = new THREE.Mesh( ballGeo, ballMaterial );
 	sphere.castShadow = true;
@@ -145,7 +151,7 @@ function init() {
 	// poles
 
 	var poleGeo = new THREE.BoxGeometry( 5, 250+125, 5 );
-	var poleMat = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0x111111, shininess: 100 } );
+	poleMat = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0x111111, shininess: 100, side: THREE.DoubleSide} );
 
 	var mesh = new THREE.Mesh( poleGeo, poleMat );
 	mesh.position.x = -250;
@@ -212,15 +218,14 @@ function init() {
 	mesh.castShadow = true;
 	scene.add( mesh );
 */
-/*
-  var table = new THREE.Mesh( new THREE.BoxGeometry( 250, 5, 250 ), poleMat );
+
+  	table = new THREE.Mesh( new THREE.BoxGeometry( 250, 20, 250 ), poleMat );
 	table.position.x = 0;
-	table.position.z = 0;
 	table.position.y = 0;
+	table.position.z = 0;
 	table.receiveShadow = true;
 	table.castShadow = true;
 	scene.add( table );
-*/
 
 /*
 	var gg = new THREE.BoxGeometry( 10, 10, 10 );
@@ -242,8 +247,17 @@ function init() {
 
 	window.addEventListener( 'resize', onWindowResize, false );
 
-	sphere.visible = false;
-	//ballPositionOffset = Date.now();
+	sphere.visible = true;
+	table.visible = true;
+
+	if(sphere.visible){
+		ballPositionOffset = Date.now();
+		collidableMeshList.push(sphere);
+	}
+
+	if(table.visible){
+		collidableMeshList.push(table);
+	}
 
 }
 
@@ -272,7 +286,7 @@ function animate() {
 		Math.sin( time / 2000 ),
 		Math.cos( time / 3000 ),
 		Math.sin( time / 1000 )
-		).normalize().multiplyScalar( windStrength );
+		).normalize().multiplyScalar( windStrength);
 
 	simulate(time); // run physics simulation to create new positions of cloth
 	render(); // update position of cloth, compute normals, rotate camera, render the scene
@@ -320,4 +334,4 @@ function render() {
 
 function map(n, start1, stop1, start2, stop2) {
   return ((n-start1)/(stop1-start1))*(stop2-start2)+start2;
-};
+}

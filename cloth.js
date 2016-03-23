@@ -15,8 +15,9 @@
 var DAMPING = 0.03;
 var DRAG = 1 - DAMPING;
 var MASS = .1;
-var restDistance = 40; // sets the size of the cloth
-var springStiffness = 0.5; // number between 0 and 1. smaller = springier, bigger = stiffer
+var restDistance = 60; // sets the size of the cloth
+var springStiffness = 1; // number between 0 and 1. smaller = springier, bigger = stiffer
+var friction = 0.9; // similar to coefficient of friction. 0 = frictionless, 1 = cloth sticks in place
 
 
 var xSegs = 10; // how many particles wide is the cloth
@@ -34,7 +35,7 @@ var TIMESTEP = 18 / 1000;
 var TIMESTEP_SQ = TIMESTEP * TIMESTEP;
 
 //var pins = [];
-var pinned = true;
+var pinned = false;
 
 var wind = true;
 var windStrength = 2;
@@ -48,10 +49,45 @@ var tmpForce = new THREE.Vector3();
 
 var lastTime;
 
+var pos;
+
+var ray = new THREE.Raycaster();
+var collisionResults, newCollisionResults;
+var whereAmI, whereWasI, directionOfMotion;
+
+var newPosition = new THREE.Vector3( 0, 0, 0 );
+var oldPosition = new THREE.Vector3( 0, 0, 0 );
+
 
 function createBall(){
   sphere.visible = !sphere.visible;
   ballPositionOffset = Date.now();
+  if(sphere.visible){
+    collidableMeshList.push(sphere);
+  }
+  else{
+    var i = collidableMeshList.indexOf(sphere);
+    collidableMeshList.splice(i, 1);
+  }
+}
+
+function createTable(){
+  table.visible = !table.visible;
+  if(table.visible){
+    collidableMeshList.push(table);
+  }
+  else{
+    var i = collidableMeshList.indexOf(table);
+    collidableMeshList.splice(i, 1);
+  }
+}
+
+function wireFrame(){
+
+  poleMat.wireframe = !poleMat.wireframe;
+  clothMaterial.wireframe = !clothMaterial.wireframe;
+  ballMaterial.wireframe = !ballMaterial.wireframe;
+
 }
 
 function plane( width, height ) {
@@ -85,11 +121,19 @@ function Particle( x, y, z, mass ) {
 
 }
 
-Particle.prototype.lock = function() {
+Particle.prototype.lockToOriginal = function() {
 
     this.position.copy( this.original );
     this.previous.copy( this.original );
 }
+
+Particle.prototype.lock = function() {
+
+    this.position.copy( this.previous );
+    this.previous.copy( this.previous );
+
+}
+
 
 // Force -> Acceleration
 Particle.prototype.addForce = function( force ) {
@@ -118,6 +162,7 @@ Particle.prototype.integrate = function( timesq ) {
 
 
 var diff = new THREE.Vector3();
+var newPosition = new THREE.Vector3();
 
 function satisifyConstrains( p1, p2, distance, stiffness ) {
 
@@ -208,7 +253,8 @@ function Cloth( w, h ) {
   // the relax constrains model seem to be just fine
   // using structural springs.
   // Shear
-  /*
+
+// /*
    var diagonalDist = Math.sqrt(restDistance * restDistance * 2);
 
 
@@ -218,18 +264,72 @@ function Cloth( w, h ) {
       constrains.push([
         particles[index(u, v)],
         particles[index(u+1, v+1)],
-        diagonalDist
+        diagonalDist,
+        springStiffness
       ]);
 
       constrains.push([
         particles[index(u+1, v)],
         particles[index(u, v+1)],
-        diagonalDist
+        diagonalDist,
+        springStiffness
       ]);
 
     }
    }
-  */
+// */
+
+
+
+// Bending springs
+
+  for ( v = 0; v < h-1; v ++ ) {
+
+    for ( u = 0; u < w-1; u ++ ) {
+
+      constrains.push( [
+        particles[ index( u, v ) ],
+        particles[ index( u, v + 2 ) ],
+        2*restDistance,
+        springStiffness
+      ] );
+
+      constrains.push( [
+        particles[ index( u, v ) ],
+        particles[ index( u + 2, v ) ],
+        2*restDistance,
+        springStiffness
+      ] );
+
+    }
+
+  }
+
+  for ( u = w, v = 0; v < h-1; v ++ ) {
+
+    constrains.push( [
+      particles[ index( u, v ) ],
+      particles[ index( u, v + 2 ) ],
+      2*restDistance,
+      springStiffness
+    ] );
+
+  }
+
+  for ( v = h, u = 0; u < w-1; u ++ ) {
+
+    constrains.push( [
+      particles[ index( u, v ) ],
+      particles[ index( u + 2, v ) ],
+      2*restDistance,
+      springStiffness
+    ] );
+
+  }
+
+
+
+
 
   this.particles = particles;
   this.constrains = constrains;
@@ -284,7 +384,7 @@ function simulate( time ) {
     particle = particles[ i ];
     particle.addForce( gravity );
 
-    particle.integrate( TIMESTEP_SQ );
+    particle.integrate( TIMESTEP_SQ ); // performs verlet integration
 
   }
 
@@ -299,33 +399,65 @@ function simulate( time ) {
 
   }
 
-  // Ball Constrains
+    //ballPosition.y = map(Math.sin( ((Date.now()-ballPositionOffset) / 600) - Math.PI/2 ),-1,1,-250+ballSize,250); //+ 40;
+    //sphere.position.copy( ballPosition );
 
-  /*
-  ballPosition.z = - Math.sin( Date.now() / 600 ) * 90 ; //+ 40;
-  ballPosition.x = Math.cos( Date.now() / 400 ) * 70;
-  */
-  //ballPosition.y = -Math.sin( Date.now() / 600 ) * 90 ; //+ 40;
+    for ( particles = cloth.particles, i = 0, il = particles.length
+        ; i < il; i ++ ) {
+
+      particle = particles[ i ];
+      whereAmI = particle.position;
+      whereWasI = particle.previous;
+
+      diff.subVectors(whereAmI,whereWasI);
+      directionOfMotion = diff.clone().normalize();
+
+      ray.set(whereWasI, directionOfMotion); // set origin and direction of a ray
+      collisionResults = ray.intersectObjects( collidableMeshList ); // calculate intersections of this ray with stuff
 
 
-  if ( sphere.visible ){
-  ballPosition.y = map(Math.sin( ((Date.now()-ballPositionOffset) / 600) - Math.PI/2 ),-1,1,-250+ballSize,250); //+ 40;
-  for ( particles = cloth.particles, i = 0, il = particles.length
-      ; i < il; i ++ ) {
+      if(collisionResults.length > 0){
 
-    particle = particles[ i ];
-    pos = particle.position;
-    diff.subVectors( pos, ballPosition );
-    if ( diff.length() < ballSize ) {
 
-      // collided
-      diff.normalize().multiplyScalar( ballSize );
-      pos.copy( ballPosition ).add( diff );
+        // if distance to collision is less than distance covered in this frame
+        // we're about to collide
 
-    }
+        if(collisionResults[0].distance < diff.length()){
+
+          ray.set(whereAmI, collisionResults[0].face.normal);
+          newCollisionResults = ray.intersectObjects( [collisionResults[0].object] );
+
+          // take appropriate action to avoid collision
+          if(newCollisionResults.length>0){
+            diff.subVectors( newCollisionResults[0].point, collisionResults[0].object.position );
+            diff.multiplyScalar( 1 + Math.pow(10,-3));
+            newPosition.copy(collisionResults[0].object.position).add( diff ).multiplyScalar(1-friction);
+            if(whereWasI.distanceTo(newPosition) > -1){
+              oldPosition.copy(whereWasI).multiplyScalar(friction);
+              whereAmI.addVectors(newPosition,oldPosition);
+            }
+            else{
+              whereAmI.copy(newPosition);
+            }
+          }
+
+
+          // if the ray being cast intersects objects an odd numner of times
+          // it means we're already inside an object
+          // i.e. we've already collided in the past. So take appropriate action
+
+          else if(collisionResults.length % 2 == 1){
+             //console.log("particle "+i+ " is struck inside an object at time " + time);
+            // may want to add some correcting behavior here
+          }
+
+
+        }
+
+      }
 
   }
-  }
+
 
   // Floor Constains
   for ( particles = cloth.particles, i = 0, il = particles.length
@@ -344,15 +476,15 @@ function simulate( time ) {
   // Pin Constrains
 
   if(pinned){
-    particles[cloth.index(0,0)].lock();
-    particles[cloth.index(xSegs,0)].lock();
-    particles[cloth.index(0,ySegs)].lock();
-    particles[cloth.index(xSegs,ySegs)].lock();
+    particles[cloth.index(0,0)].lockToOriginal();
+    particles[cloth.index(xSegs,0)].lockToOriginal();
+    particles[cloth.index(0,ySegs)].lockToOriginal();
+    particles[cloth.index(xSegs,ySegs)].lockToOriginal();
 
-    //particles[cloth.index(xSegs/2,0)].lock();
-    //particles[cloth.index(0,ySegs/2)].lock();
-    //particles[cloth.index(xSegs/2,ySegs)].lock();
-    //particles[cloth.index(xSegs,ySegs/2)].lock();
+    //particles[cloth.index(xSegs/2,0)].lockToOriginal();
+    //particles[cloth.index(0,ySegs/2)].lockToOriginal();
+    //particles[cloth.index(xSegs/2,ySegs)].lockToOriginal();
+    //particles[cloth.index(xSegs,ySegs/2)].lockToOriginal();
 
   }
 
