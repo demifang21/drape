@@ -34,3 +34,4 @@ Stuff to implement:
 3. [Untangling Cloth](http://graphics.pixar.com/library/UntanglingCloth/paper.pdf) (2003)
 4. [Simulation of Clothing with Folds and Wrinkles] (https://graphics.stanford.edu/papers/cloth2003/cloth.pdf) (2003)
 5. [Robust Treatment of Collisions, Contact and Friction for Cloth Animation](http://accad.osu.edu/~elaine/intrACCAD/cara/cloth/papers/2002-Bridson.pdf) (2002)
+6. [Collision and self collision handling in cloth model dedicated to design garments](https://graphics.stanford.edu/courses/cs468-02-winter/Papers/Collisions_vetements.pdf) (1997)
