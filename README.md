@@ -5,6 +5,7 @@ A fabric design and simulation tool, built in [three.js](http://threejs.org/) st
 You can test the code at the following links:
 
 [Latest version](https://gitcdn.xyz/repo/aatishb/drape/master/index.html)
+
 Changelog:
 - April 5: added sliders GUI, mouse control (scroll to zoom, drag mouse to change view)
 - March 22: added shear & bending springs, collision detection, friction, wireframe view
