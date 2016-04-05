@@ -1,9 +1,13 @@
 if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
-var container, stats;
+var container;
+var stats;
+var controls;
 var camera, scene, renderer;
 
 var clothGeometry;
+var groundMaterial;
+
 var sphere;
 var table;
 var object;
@@ -12,8 +16,10 @@ var collidableMeshList = [];
 
 var rotate = true;
 
-var poleMat, clothMaterial,ballMaterial;
+var gui;
+var guiControls;
 
+var poleMat, clothMaterial,ballMaterial;
 init();
 animate();
 
@@ -32,7 +38,7 @@ function init() {
 
 	// Second thing you need to do is set up the camera
 	camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 1, 10000 );
-	camera.position.y = 50;
+	camera.position.y = 450;
 	camera.position.z = 1500;
 	scene.add( camera );
 
@@ -42,6 +48,7 @@ function init() {
 	renderer.setPixelRatio( window.devicePixelRatio );
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.setClearColor( scene.fog.color );
+	//renderer.setClearColor(0xffffff);
 
 	container.appendChild( renderer.domElement );
 
@@ -50,10 +57,14 @@ function init() {
 
 	renderer.shadowMap.enabled = true;
 
-	//
-
+	//STATS
 	stats = new Stats();
 	container.appendChild( stats.domElement );
+
+	// mouse control
+	// CONTROLS
+	controls = new THREE.TrackballControls( camera, renderer.domElement );
+
 
 	// lights
 
@@ -86,14 +97,17 @@ function init() {
 	// cloth material
 
 	var loader = new THREE.TextureLoader();
+	/*
 	var clothTexture = loader.load( "textures/patterns/circuit_pattern.png" );
 	clothTexture.wrapS = clothTexture.wrapT = THREE.RepeatWrapping;
 	clothTexture.anisotropy = 16;
+	*/
 
 	clothMaterial = new THREE.MeshPhongMaterial( {
+		color: 0x030303,
 		specular: 0x030303,
 		wireframeLinewidth: 2,
-		map: clothTexture,
+		//map: clothTexture,
 		side: THREE.DoubleSide,
 		alphaTest: 0.5
 	} );
@@ -104,9 +118,11 @@ function init() {
 	clothGeometry = new THREE.ParametricGeometry( clothInitialPosition, cloth.w, cloth.h );
 	clothGeometry.dynamic = true;
 
+	/*
 	var uniforms = { texture:  { type: "t", value: clothTexture } };
 	var vertexShader = document.getElementById( 'vertexShaderDepth' ).textContent;
 	var fragmentShader = document.getElementById( 'fragmentShaderDepth' ).textContent;
+	*/
 
 	// cloth mesh
 
@@ -116,12 +132,14 @@ function init() {
 	object.castShadow = true;
 	scene.add( object ); // adds the cloth to the scene
 
+	/*
 	object.customDepthMaterial = new THREE.ShaderMaterial( {
 		uniforms: uniforms,
 		vertexShader: vertexShader,
 		fragmentShader: fragmentShader,
 		side: THREE.DoubleSide
 	} );
+	*/
 
 	// sphere
 
@@ -135,12 +153,19 @@ function init() {
 
 	// ground
 
+	/*
 	var groundTexture = loader.load( "textures/terrain/grasslight-big.jpg" );
 	groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
 	groundTexture.repeat.set( 25, 25 );
 	groundTexture.anisotropy = 16;
+	*/
 
-	var groundMaterial = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0x111111, map: groundTexture } );
+	groundMaterial = new THREE.MeshPhongMaterial(
+		{
+			color: 0x030303,
+			specular: 0x111111//,
+			//map: groundTexture
+		} );
 
 	var mesh = new THREE.Mesh( new THREE.PlaneBufferGeometry( 20000, 20000 ), groundMaterial );
 	mesh.position.y = -250;
@@ -247,8 +272,8 @@ function init() {
 
 	window.addEventListener( 'resize', onWindowResize, false );
 
-	sphere.visible = true;
-	table.visible = true;
+	sphere.visible = false;
+	table.visible = false;
 
 	if(sphere.visible){
 		ballPositionOffset = Date.now();
@@ -258,6 +283,7 @@ function init() {
 	if(table.visible){
 		collidableMeshList.push(table);
 	}
+
 
 }
 
@@ -280,20 +306,38 @@ function animate() {
 
 	var time = Date.now();
 
-	windStrength = Math.cos( time / 7000 ) * 20 + 40;
-	//windForce.set( Math.sin( time / 2000 ), Math.sin( time / 3000 ), Math.cos( time / 1000 ) ).normalize().multiplyScalar( windStrength );
-	windForce.set(
-		Math.sin( time / 2000 ),
-		Math.cos( time / 3000 ),
-		Math.sin( time / 1000 )
-		).normalize().multiplyScalar( windStrength);
-
 	simulate(time); // run physics simulation to create new positions of cloth
-	render(); // update position of cloth, compute normals, rotate camera, render the scene
+	render(); 		// update position of cloth, compute normals, rotate camera, render the scene
 	stats.update();
+	controls.update();
 
 }
 
+// restartCloth() is used when we change a fundamental cloth property with a slider
+// and therefore need to recreate the cloth object from scratch
+function restartCloth()
+{
+
+
+		scene.remove(object);
+		//clothInitialPosition = plane( 500, 500 );
+		cloth = new Cloth( xSegs, ySegs );
+		gravity = new THREE.Vector3( 0, - GRAVITY, 0 ).multiplyScalar( MASS );
+
+		clothGeometry = new THREE.ParametricGeometry( clothInitialPosition, xSegs, ySegs );
+		clothGeometry.dynamic = true;
+
+		// cloth mesh
+
+		// a mesh takes the geometry and applies a material to it
+		object = new THREE.Mesh( clothGeometry, clothMaterial );
+		object.position.set( 0, 0, 0 );
+		object.castShadow = true;
+
+		scene.add( object ); // adds the cloth to the scene
+
+
+}
 
 // the rendering happens here
 // creates a loop that causes the rendere to draw the scene 60 times a second
@@ -321,8 +365,9 @@ function render() {
 
 	if ( rotate ) {
 
-		camera.position.x = Math.cos( timer ) * 1500;
-		camera.position.z = Math.sin( timer ) * 1500;
+		var cameraRadius = Math.sqrt(camera.position.x*camera.position.x + camera.position.z*camera.position.z);
+		camera.position.x = Math.cos( timer ) * cameraRadius;
+		camera.position.z = Math.sin( timer ) * cameraRadius;
 
 	}
 
@@ -332,6 +377,8 @@ function render() {
 
 }
 
+/*
 function map(n, start1, stop1, start2, stop2) {
   return ((n-start1)/(stop1-start1))*(stop2-start2)+start2;
 }
+*/
