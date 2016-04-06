@@ -10,7 +10,7 @@
 // http://cg.alexandra.dk/tag/spring-mass-system/
 // Real-time Cloth Animation http://www.darwin3d.com/gamedev/articles/col0599.pdf
 
-var guiEnabled = true;
+var guiEnabled = false;
 
 var structuralSprings = true;
 var shearSprings = false;
@@ -83,7 +83,7 @@ if(guiEnabled){
   f1.add(guiControls, 'bendingSpringStiffness', 0, 1).name('stiffness').onChange(function(value){springStiffnessB = value; restartCloth();});
   f1.add(guiControls, 'bedingSpringLength', 10, 150).name('length').onChange(function(value){restDistanceB = value; restartCloth();});
 
-  f1.add(guiControls, 'shearSprings').onChange(function(value){structuralSprings = value; restartCloth();});
+  f1.add(guiControls, 'shearSprings').onChange(function(value){shearSprings = value; restartCloth();});
   f1.add(guiControls, 'shearSpringStiffness', 0, 1).name('stiffness').onChange(function(value){springStiffnessS = value; restartCloth();});
   f1.add(guiControls, 'shearSpringLength', 10, 150).name('length').onChange(function(value){restDistanceS = value; restartCloth();});
 
@@ -500,6 +500,27 @@ function simulate( time ) {
     //ballPosition.y = map(Math.sin( ((Date.now()-ballPositionOffset) / 600) - Math.PI/2 ),-1,1,-250+ballSize,250); //+ 40;
     //sphere.position.copy( ballPosition );
 
+    if(sphere.visible){
+
+      for ( particles = cloth.particles, i = 0, il = particles.length
+          ; i < il; i ++ ) {
+
+        particle = particles[ i ];
+        pos = particle.position;
+        diff.subVectors( pos, ballPosition );
+        if ( diff.length() < ballSize ) {
+
+          // collided
+          diff.normalize().multiplyScalar( ballSize );
+          pos.copy( ballPosition ).add( diff );
+
+        }
+
+      }
+
+
+    }
+    /*
     for ( particles = cloth.particles, i = 0, il = particles.length
         ; i < il; i ++ ) {
 
@@ -555,7 +576,7 @@ function simulate( time ) {
       }
 
   }
-
+  */
 
   // Floor Constains
   for ( particles = cloth.particles, i = 0, il = particles.length
