@@ -10,7 +10,7 @@
 // http://cg.alexandra.dk/tag/spring-mass-system/
 // Real-time Cloth Animation http://www.darwin3d.com/gamedev/articles/col0599.pdf
 
-var guiEnabled = false;
+var guiEnabled = true;
 
 var structuralSprings = true;
 var shearSprings = false;
