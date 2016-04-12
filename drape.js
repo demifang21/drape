@@ -19,7 +19,7 @@ var rotate = true;
 var gui;
 var guiControls;
 
-var poleMat, clothMaterial,ballMaterial;
+var poleMat, clothMaterial, ballMaterial;
 init();
 animate();
 
@@ -162,8 +162,8 @@ function init() {
 
 	groundMaterial = new THREE.MeshPhongMaterial(
 		{
-			color: 0x030303,
-			specular: 0x111111//,
+			color: 0xffffff,
+			specular: 0xffffff//,
 			//map: groundTexture
 		} );
 
@@ -275,15 +275,10 @@ function init() {
 	sphere.visible = false;
 	table.visible = false;
 
-	if(sphere.visible){
-		ballPositionOffset = Date.now();
-		collidableMeshList.push(sphere);
-	}
+	createBall();
 
-	if(table.visible){
-		collidableMeshList.push(table);
-	}
-
+	ballMaterial.color.setHex(0x030303);
+	poleMat.color.setHex(0x030303);
 
 }
 
@@ -322,6 +317,8 @@ function restartCloth()
 		scene.remove(object);
 		//clothInitialPosition = plane( 500, 500 );
 		cloth = new Cloth( xSegs, ySegs );
+
+		GRAVITY = 9.81 * weight; //
 		gravity = new THREE.Vector3( 0, - GRAVITY, 0 ).multiplyScalar( MASS );
 
 		clothGeometry = new THREE.ParametricGeometry( clothInitialPosition, xSegs, ySegs );
