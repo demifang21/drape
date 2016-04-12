@@ -507,10 +507,13 @@ function simulate( time ) {
 
   }
 
-    //ballPosition.y = map(Math.sin( ((Date.now()-ballPositionOffset) / 600) - Math.PI/2 ),-1,1,-250+ballSize,250); //+ 40;
-    //sphere.position.copy( ballPosition );
+    ballPosition.y = 50*Math.sin(Date.now()/600);
+    ballPosition.x = 50*Math.sin(Date.now()/600);
+    ballPosition.z = 50*Math.cos(Date.now()/600);
 
-/*
+    sphere.position.copy( ballPosition );
+
+
     if(sphere.visible){
 
       for ( particles = cloth.particles, i = 0, il = particles.length
@@ -529,9 +532,9 @@ function simulate( time ) {
 
       }
     }
-*/
 
 
+/*
     for ( particles = cloth.particles, i = 0, il = particles.length
         ; i < il; i ++ ) {
 
@@ -546,9 +549,9 @@ function simulate( time ) {
       collisionResults = ray.intersectObjects( collidableMeshList ); // calculate intersections of this ray with stuff
 
 
-      if(collisionResults.length %2 == 1){
+      if(collisionResults.length > 0){
 
-        /*
+
 
         // if distance to collision is less than distance covered in this frame
         // we're about to collide
@@ -577,19 +580,19 @@ function simulate( time ) {
           // it means we're already inside an object
           // i.e. we've already collided in the past. So take appropriate action
 
-          else if(collisionResults.length % 2 == 1){
-             console.log("particle "+i+ " is struck inside an object at time " + time);
+          //else if(collisionResults.length % 2 == 1){
+            // console.log("particle "+i+ " is struck inside an object at time " + time);
             // may want to add some correcting behavior here
-          }
+          //}
 
 
         }
 
-        */
+
       }
 
   }
-
+*/
 
   // Floor Constains
   for ( particles = cloth.particles, i = 0, il = particles.length

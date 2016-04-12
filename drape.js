@@ -277,8 +277,8 @@ function init() {
 
 	createBall();
 
-	ballMaterial.color.setHex(0x030303);
-	poleMat.color.setHex(0x030303);
+	//ballMaterial.color.setHex(0x030303);
+	//poleMat.color.setHex(0x030303);
 
 }
 
@@ -374,8 +374,7 @@ function render() {
 
 }
 
-/*
+
 function map(n, start1, stop1, start2, stop2) {
   return ((n-start1)/(stop1-start1))*(stop2-start2)+start2;
 }
-*/
