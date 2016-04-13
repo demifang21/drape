@@ -7,6 +7,7 @@ You can test the code at the following links:
 [Latest version](https://gitcdn.xyz/repo/aatishb/drape/master/index.html)
 
 Changelog:
+- April 12: improved collision detection (detects collisions with arbitrarily shaped static or moving objects), more intuitive GUI controls, made objects transparent
 - April 5: added sliders GUI, mouse control (scroll to zoom, drag mouse to change view)
 - March 22: added shear & bending springs, collision detection, friction, wireframe view
 
@@ -25,9 +26,9 @@ Stuff to implement:
 1. ~~Collision detection~~ (implemented point-face collision. also add edge-edge collision?)
 2. ~~Bending & shear springs~~
 3. Prevent cloth self-intersections
-4. GUI
-5. Export to STL
-6. Explore different methods of interaction
+4. ~~GUI~~
+5. Explore different methods of interaction
+6. Optimize collision detection (particularly for sphere)
 
 ## References
 
