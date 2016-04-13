@@ -104,7 +104,7 @@ function init() {
 	*/
 
 	clothMaterial = new THREE.MeshPhongMaterial( {
-		color: 0x030303,
+		color: 0xaa2929,
 		specular: 0x030303,
 		wireframeLinewidth: 2,
 		//map: clothTexture,
@@ -322,7 +322,7 @@ function restartCloth()
 
 		scene.remove(object);
 		//clothInitialPosition = plane( 500, 500 );
-		cloth = new Cloth( xSegs, ySegs );
+		cloth = new Cloth( xSegs, ySegs, fabricLength );
 
 		GRAVITY = 9.81 * weight; //
 		gravity = new THREE.Vector3( 0, - GRAVITY, 0 ).multiplyScalar( MASS );

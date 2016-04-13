@@ -20,7 +20,6 @@ var DAMPING = 0.03;
 var DRAG = 1 - DAMPING;
 var MASS = .1;
 
-var restDistance = 50; // sets the size of the cloth
 var springStiffness = 1; // number between 0 and 1. smaller = springier, bigger = stiffer
 
 var restDistanceB = 2;
@@ -33,6 +32,10 @@ var friction = 0.9; // similar to coefficient of friction. 0 = frictionless, 1 =
 
 var xSegs = 10; // how many particles wide is the cloth
 var ySegs = 10; // how many particles tall is the cloth
+
+var fabricLength = 500; // sets the size of the cloth
+var restDistance = fabricLength/xSegs;
+
 
 var weight = 140;
 var newCollisionDetection = true;
@@ -54,8 +57,8 @@ if(guiEnabled){
 
     this.weight = weight;
 
+    this.fabricLength = fabricLength;
     this.structuralSprings = structuralSprings;
-    this.structuralSpringLength = restDistance*10;
     //this.structuralSpringStiffness = springStiffness;
 
     this.bendingSprings = bendingSprings;
@@ -78,10 +81,7 @@ if(guiEnabled){
 
   gui = new dat.GUI();
 
-  //gui.add(guiControls, 'cameraHeight', -1000, 1000).onChange(function(value){camera.position.y = value; restartCloth();});
-
-
-  var f0 = gui.add(guiControls, 'structuralSpringLength', 200, 1000).name('Fabric Length').onChange(function(value){restDistance = value/xSegs; restartCloth();});
+  var f0 = gui.add(guiControls, 'fabricLength', 200, 1000).name('Fabric Length').onChange(function(value){fabricLength = value; restartCloth();});
 
   var f1 = gui.addFolder('Fabric Weave');
 
@@ -89,17 +89,17 @@ if(guiEnabled){
   //f1.add(guiControls, 'structuralSpringStiffness', 0, 1).name('stiffness').onChange(function(value){springStiffness = value; restartCloth();});
   f1.add(guiControls, 'shearSprings').name('bias grain').onChange(function(value){shearSprings = value; restartCloth();});
   //f1.add(guiControls, 'shearSpringStiffness', 0, 1).name('stiffness').onChange(function(value){springStiffnessS = value; restartCloth();});
-  f1.add(guiControls, 'shearSpringLengthMultiplier', 1, 2).name('length').onChange(function(value){restDistanceS = value; restartCloth();});
+  f1.add(guiControls, 'shearSpringLengthMultiplier', 1, 2).name('multiplier').onChange(function(value){restDistanceS = value; restartCloth();});
   f1.add(guiControls, 'bendingSprings').name('drape').onChange(function(value){bendingSprings = value; restartCloth();});
   //f1.add(guiControls, 'bendingSpringStiffness', 0, 1).name('stiffness').onChange(function(value){springStiffnessB = value; restartCloth();});
-  f1.add(guiControls, 'bedingSpringLengthMultiplier', 1.5, 2.5).name('length').onChange(function(value){restDistanceB = value; restartCloth();});
+  f1.add(guiControls, 'bedingSpringLengthMultiplier', 1.5, 2.5).name('multiplier').onChange(function(value){restDistanceB = value; restartCloth();});
 
   var f2 = gui.addFolder('Fabric Physics');
 
   f2.add(guiControls, 'newCollisionDetection').name('use raycasting').onChange(function(value){newCollisionDetection = value;});
   f2.add(guiControls, 'friction', 0, 1).onChange(function(value){friction = value;});
   f2.add(guiControls, 'weight', 0, 500).step(1).onChange(function(value){weight = value;});
-  f2.add(guiControls, 'particles', 10, 50).step(1).onChange(function(value){xSegs = value; ySegs = value; restDistance = 50*10/value; this.structuralSpringLength = restDistance;   gui.__controllers[0].updateDisplay(); restartCloth();});
+  f2.add(guiControls, 'particles', 10, 50).step(1).onChange(function(value){xSegs = value; ySegs = value; restartCloth();});
 
 
   var f3 = gui.addFolder('Colors');
@@ -121,7 +121,7 @@ if(guiEnabled){
 }
 
 var clothInitialPosition = plane( 500, 500 );
-var cloth = new Cloth( xSegs, ySegs );
+var cloth = new Cloth( xSegs, ySegs, fabricLength );
 
 var GRAVITY = 9.81 * weight; //
 var gravity = new THREE.Vector3( 0, - GRAVITY, 0 ).multiplyScalar( MASS );
@@ -276,12 +276,14 @@ function satisifyConstrains( p1, p2, distance, stiffness ) {
 }
 
 
-function Cloth( w, h ) {
+function Cloth( w, h, l ) {
 
   //w = w || 10;
   //h = h || 10;
   this.w = w;
   this.h = h;
+  restDistance = l/w;
+
 
   var particles = [];
   var constrains = [];
