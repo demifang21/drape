@@ -144,7 +144,12 @@ function init() {
 	// sphere
 
 	var ballGeo = new THREE.SphereGeometry( ballSize, 20, 20 );
-	ballMaterial = new THREE.MeshPhongMaterial( { color: 0xaaaaaa, side: THREE.DoubleSide} );
+	ballMaterial = new THREE.MeshPhongMaterial( {
+		color: 0xaaaaaa,
+		side: THREE.DoubleSide,
+		transparent: true,
+		opacity:0.01
+	} );
 
 	sphere = new THREE.Mesh( ballGeo, ballMaterial );
 	sphere.castShadow = true;
@@ -162,8 +167,8 @@ function init() {
 
 	groundMaterial = new THREE.MeshPhongMaterial(
 		{
-			color: 0xffffff,
-			specular: 0xffffff//,
+			color: 0x404761,//0x3c3c3c,
+			specular: 0x404761//0x3c3c3c//,
 			//map: groundTexture
 		} );
 
@@ -244,7 +249,7 @@ function init() {
 	scene.add( mesh );
 */
 
-  	table = new THREE.Mesh( new THREE.BoxGeometry( 250, 20, 250 ), poleMat );
+  	table = new THREE.Mesh( new THREE.BoxGeometry( 250, 100, 250 ), ballMaterial );
 	table.position.x = 0;
 	table.position.y = 0;
 	table.position.z = 0;
@@ -275,7 +280,8 @@ function init() {
 	sphere.visible = false;
 	table.visible = false;
 
-	createBall();
+	//createBall();
+	createTable();
 
 	//ballMaterial.color.setHex(0x030303);
 	//poleMat.color.setHex(0x030303);

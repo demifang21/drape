@@ -35,6 +35,7 @@ var xSegs = 10; // how many particles wide is the cloth
 var ySegs = 10; // how many particles tall is the cloth
 
 var weight = 140;
+var newCollisionDetection = true;
 
 if(guiEnabled){
 
@@ -44,15 +45,17 @@ if(guiEnabled){
   guiControls = new function(){
     //this.cameraHeight = 450;
     //this.particleMass = MASS*10;
-    //this.friction = friction;
-    this.particlesWide = xSegs;
-    this.particlesLong = ySegs;
+    this.friction = friction;
+    this.particles = xSegs;
+    //this.particlesWide = xSegs;
+    //this.particlesLong = ySegs;
+    this.newCollisionDetection = newCollisionDetection;
     //this.damping = DAMPING;
 
     this.weight = weight;
 
     this.structuralSprings = structuralSprings;
-    this.structuralSpringLength = restDistance;
+    this.structuralSpringLength = restDistance*10;
     //this.structuralSpringStiffness = springStiffness;
 
     this.bendingSprings = bendingSprings;
@@ -66,8 +69,8 @@ if(guiEnabled){
     this.clothColor = 0x030303;
     this.clothSpecular = 0x030303;
 
-    this.groundColor = 0xffffff;
-    this.groundSpecular = 0xffffff;
+    this.groundColor = 0x3c3c3c;
+    this.groundSpecular = 0x3c3c3c;
 
     this.fogColor = 0xcce0ff;
 
@@ -77,11 +80,13 @@ if(guiEnabled){
 
   //gui.add(guiControls, 'cameraHeight', -1000, 1000).onChange(function(value){camera.position.y = value; restartCloth();});
 
-  var f1 = gui.addFolder('Weave');
+
+  var f0 = gui.add(guiControls, 'structuralSpringLength', 200, 1000).name('Fabric Length').onChange(function(value){restDistance = value/xSegs; restartCloth();});
+
+  var f1 = gui.addFolder('Fabric Weave');
 
   f1.add(guiControls, 'structuralSprings').name('cross grain').onChange(function(value){structuralSprings = value; restartCloth();});
   //f1.add(guiControls, 'structuralSpringStiffness', 0, 1).name('stiffness').onChange(function(value){springStiffness = value; restartCloth();});
-  f1.add(guiControls, 'structuralSpringLength', 10, 150).name('length').onChange(function(value){restDistance = value; restartCloth();});
   f1.add(guiControls, 'shearSprings').name('bias grain').onChange(function(value){shearSprings = value; restartCloth();});
   //f1.add(guiControls, 'shearSpringStiffness', 0, 1).name('stiffness').onChange(function(value){springStiffnessS = value; restartCloth();});
   f1.add(guiControls, 'shearSpringLengthMultiplier', 1, 2).name('length').onChange(function(value){restDistanceS = value; restartCloth();});
@@ -89,11 +94,12 @@ if(guiEnabled){
   //f1.add(guiControls, 'bendingSpringStiffness', 0, 1).name('stiffness').onChange(function(value){springStiffnessB = value; restartCloth();});
   f1.add(guiControls, 'bedingSpringLengthMultiplier', 1.5, 2.5).name('length').onChange(function(value){restDistanceB = value; restartCloth();});
 
+  var f2 = gui.addFolder('Fabric Physics');
 
-  var f2 = gui.addFolder('Material');
-  f2.add(guiControls, 'weight', 0, 500).step(1).onChange(function(value){weight = value; restartCloth();});
-  f2.add(guiControls, 'particlesWide', 0, 20).step(1).onChange(function(value){xSegs = value; restartCloth();});
-  f2.add(guiControls, 'particlesLong', 0, 20).step(1).onChange(function(value){ySegs = value; restartCloth();});
+  f2.add(guiControls, 'newCollisionDetection').name('use raycasting').onChange(function(value){newCollisionDetection = value;});
+  f2.add(guiControls, 'friction', 0, 1).onChange(function(value){friction = value;});
+  f2.add(guiControls, 'weight', 0, 500).step(1).onChange(function(value){weight = value;});
+  f2.add(guiControls, 'particles', 10, 50).step(1).onChange(function(value){xSegs = value; ySegs = value; restDistance = 50*10/value; this.structuralSpringLength = restDistance;   gui.__controllers[0].updateDisplay(); restartCloth();});
 
 
   var f3 = gui.addFolder('Colors');
@@ -113,7 +119,6 @@ if(guiEnabled){
   gui.remember(guiControls);
 
 }
-
 
 var clothInitialPosition = plane( 500, 500 );
 var cloth = new Cloth( xSegs, ySegs );
@@ -149,12 +154,16 @@ var whereAmI, whereWasI, directionOfMotion;
 var newPosition = new THREE.Vector3( 0, 0, 0 );
 var oldPosition = new THREE.Vector3( 0, 0, 0 );
 
+var diff = new THREE.Vector3();
+var objectCenter = new THREE.Vector3();
+
 
 function createBall(){
   sphere.visible = !sphere.visible;
   ballPositionOffset = Date.now();
   if(sphere.visible){
     collidableMeshList.push(sphere);
+    if(table.visible){createTable();}
   }
   else{
     var i = collidableMeshList.indexOf(sphere);
@@ -166,6 +175,7 @@ function createTable(){
   table.visible = !table.visible;
   if(table.visible){
     collidableMeshList.push(table);
+    if(sphere.visible){createBall();}
   }
   else{
     var i = collidableMeshList.indexOf(table);
@@ -252,8 +262,6 @@ Particle.prototype.integrate = function( timesq ) {
 };
 
 
-var diff = new THREE.Vector3();
-var newPosition = new THREE.Vector3();
 
 function satisifyConstrains( p1, p2, distance, stiffness ) {
 
@@ -367,27 +375,6 @@ function Cloth( w, h ) {
         ]);
       }
 
-      /*
-      if(u == 0 || u == w){
-        constrains.push( [
-          particles[ index( u, v ) ],
-          particles[ index( u, v + 1 ) ],
-          restDistance,
-          springStiffness
-        ] );
-      }
-
-      if(v == 0 || v == h){
-        constrains.push( [
-          particles[ index( u, v ) ],
-          particles[ index( u + 1, v ) ],
-          restDistance,
-          springStiffness
-        ] );
-      }
-      */
-
-
     }
    }
   }
@@ -444,6 +431,8 @@ function Cloth( w, h ) {
 
 
 }
+
+var startTime, stopTime;
 
 function simulate( time ) {
 
@@ -514,27 +503,34 @@ function simulate( time ) {
     sphere.position.copy( ballPosition );
 
 
-    if(sphere.visible){
+    startTime = Date.now();
 
-      for ( particles = cloth.particles, i = 0, il = particles.length
-          ; i < il; i ++ ) {
+    if(!newCollisionDetection){
+      if(sphere.visible){
 
-        particle = particles[ i ];
-        pos = particle.position;
-        diff.subVectors( pos, ballPosition );
-        if ( diff.length() < ballSize ) {
+        for ( particles = cloth.particles, i = 0, il = particles.length
+            ; i < il; i ++ ) {
 
-          // collided
-          diff.normalize().multiplyScalar( ballSize );
-          pos.copy( ballPosition ).add( diff );
+          particle = particles[ i ];
+          pos = particle.position;
+          diff.subVectors( pos, ballPosition );
+          if ( diff.length() < ballSize ) {
+
+            // collided
+            diff.normalize().multiplyScalar( ballSize );
+            pos.copy( ballPosition ).add( diff );
+
+          }
 
         }
-
       }
+
     }
 
+    else if(newCollisionDetection){
 
-/*
+
+
     for ( particles = cloth.particles, i = 0, il = particles.length
         ; i < il; i ++ ) {
 
@@ -550,18 +546,21 @@ function simulate( time ) {
 
 
       if(collisionResults.length > 0){
+        //console.log(collisionResults.length);
 
 
 
-        // if distance to collision is less than distance covered in this frame
-        // we're about to collide
+        if(collisionResults.length %2==0 && collisionResults[0].distance < diff.length()){
+        // if ray cast from our starting point makes an even number of intersections (i.e. we WERE outside)
+        // AND distance to collision is less than distance covered in this frame
+        // then we're about to collide
+        // console.log("particle "+i+ " struck an object at time " + time);
 
-        if(collisionResults[0].distance < diff.length()){
+        // so take appropriate action to avoid this collision
 
           ray.set(whereAmI, collisionResults[0].face.normal);
           newCollisionResults = ray.intersectObjects( [collisionResults[0].object] );
 
-          // take appropriate action to avoid collision
           if(newCollisionResults.length>0){
             diff.subVectors( newCollisionResults[0].point, collisionResults[0].object.position );
             diff.multiplyScalar( 1 + Math.pow(10,-3));
@@ -575,24 +574,38 @@ function simulate( time ) {
             }
           }
 
-
-          // if the ray being cast intersects objects an odd numner of times
-          // it means we're already inside an object
-          // i.e. we've already collided in the past. So take appropriate action
-
-          //else if(collisionResults.length % 2 == 1){
-            // console.log("particle "+i+ " is struck inside an object at time " + time);
-            // may want to add some correcting behavior here
-          //}
-
-
         }
+
+
+          else if(collisionResults.length % 2 == 1){
+            // if the ray being cast intersects objects an odd numner of times
+            // it means we're already inside an object
+            // i.e. we've already collided in the past. So take appropriate action
+            // console.log("particle "+i+ " is inside an object at time " + time);
+
+            // response: push particles outside
+            objectCenter.copy(collisionResults[0].object.position);
+            diff.subVectors( whereAmI, objectCenter ).normalize();
+            ray.set(objectCenter,diff);
+            newCollisionResults = ray.intersectObjects([collisionResults[0].object]);
+            diff.subVectors( newCollisionResults[0].point, collisionResults[0].object.position );
+            diff.multiplyScalar( 1 + Math.pow(10,-3));
+            whereAmI.copy(collisionResults[0].object.position).add( diff );
+
+          }
+
 
 
       }
 
   }
-*/
+
+
+
+    }
+
+  stopTime = Date.now();
+  //console.log(stopTime-startTime);
 
   // Floor Constains
   for ( particles = cloth.particles, i = 0, il = particles.length
