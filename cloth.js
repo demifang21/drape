@@ -98,7 +98,7 @@ if(guiEnabled){
 
   f2.add(guiControls, 'newCollisionDetection').name('use raycasting').onChange(function(value){newCollisionDetection = value;});
   f2.add(guiControls, 'friction', 0, 1).onChange(function(value){friction = value;});
-  f2.add(guiControls, 'weight', 0, 500).step(1).onChange(function(value){weight = value;});
+  f2.add(guiControls, 'weight', 0, 500).step(1).onChange(function(value){weight = value; restartCloth();});
   f2.add(guiControls, 'particles', 10, 50).step(1).onChange(function(value){xSegs = value; ySegs = value; restartCloth();});
 
 
