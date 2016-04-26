@@ -28,22 +28,17 @@ function init() {
 	container = document.createElement( 'div' );
 	document.body.appendChild( container );
 
-	// scene
-
-	// First thing you need to do is set up a scene
+	// scene (First thing you need to do is set up a scene)
 	scene = new THREE.Scene();
 	scene.fog = new THREE.Fog( 0xcce0ff, 500, 10000 );
 
-	// camera
-
-	// Second thing you need to do is set up the camera
+	// camera (Second thing you need to do is set up the camera)
 	camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 1, 10000 );
 	camera.position.y = 450;
 	camera.position.z = 1500;
 	scene.add( camera );
 
-	// Third thing you need is a renderer
-
+	// renderer (Third thing you need is a renderer)
 	renderer = new THREE.WebGLRenderer( { antialias: true } );
 	renderer.setPixelRatio( window.devicePixelRatio );
 	renderer.setSize( window.innerWidth, window.innerHeight );
@@ -51,57 +46,52 @@ function init() {
 	//renderer.setClearColor(0xffffff);
 
 	container.appendChild( renderer.domElement );
-
 	renderer.gammaInput = true;
 	renderer.gammaOutput = true;
-
 	renderer.shadowMap.enabled = true;
 
-	//STATS
+	// This gives us stats on how well the simulation is running
 	stats = new Stats();
 	container.appendChild( stats.domElement );
 
-	// mouse control
-	// CONTROLS
+	// mouse controls
 	controls = new THREE.TrackballControls( camera, renderer.domElement );
 
-
-	// lights
-
+	// lights (fourth thing you need is lights)
 	var light, materials;
-
 	scene.add( new THREE.AmbientLight( 0x666666 ) );
-
 	light = new THREE.DirectionalLight( 0xdfebff, 1.75 );
 	light.position.set( 50, 200, 100 );
 	light.position.multiplyScalar( 1.3 );
-
 	light.castShadow = true;
 	// light.shadowCameraVisible = true;
-
 	light.shadow.mapSize.width = 1024;
 	light.shadow.mapSize.height = 1024;
 
 	var d = 300;
-
 	light.shadow.camera.left = -d;
 	light.shadow.camera.right = d;
 	light.shadow.camera.top = d;
 	light.shadow.camera.bottom = -d;
-
 	light.shadow.camera.far = 1000;
 
 	scene.add( light );
 
 
-	// cloth material
+	// cloth (Now we're going to create the cloth)
+	// every thing in our world needs a material and a geometry
 
-	var loader = new THREE.TextureLoader();
 	/*
+	// this part allows us to use an image for the cloth texture
+	// can include transparent parts
+	var loader = new THREE.TextureLoader();
 	var clothTexture = loader.load( "textures/patterns/circuit_pattern.png" );
 	clothTexture.wrapS = clothTexture.wrapT = THREE.RepeatWrapping;
 	clothTexture.anisotropy = 16;
 	*/
+
+	// cloth material
+	// this tells us the material's color, how light reflects off it, etc.
 
 	clothMaterial = new THREE.MeshPhongMaterial( {
 		color: 0xaa2929,
@@ -113,26 +103,29 @@ function init() {
 	} );
 
 	// cloth geometry
-
-	// clothGeometry is an object that contains all the points and faces of the cloth
+	// the geometry contains all the points and faces of an object
 	clothGeometry = new THREE.ParametricGeometry( clothInitialPosition, cloth.w, cloth.h );
 	clothGeometry.dynamic = true;
 
 	/*
+	// more stuff needed for the texture
 	var uniforms = { texture:  { type: "t", value: clothTexture } };
 	var vertexShader = document.getElementById( 'vertexShaderDepth' ).textContent;
 	var fragmentShader = document.getElementById( 'fragmentShaderDepth' ).textContent;
 	*/
 
 	// cloth mesh
-
 	// a mesh takes the geometry and applies a material to it
+	// so a mesh = geometry + material
 	object = new THREE.Mesh( clothGeometry, clothMaterial );
 	object.position.set( 0, 0, 0 );
 	object.castShadow = true;
-	scene.add( object ); // adds the cloth to the scene
+
+	// whenever we make something, we need to also add it to the scene
+	scene.add( object ); // add cloth to the scene
 
 	/*
+	// more stuff needed for texture
 	object.customDepthMaterial = new THREE.ShaderMaterial( {
 		uniforms: uniforms,
 		vertexShader: vertexShader,
@@ -142,29 +135,32 @@ function init() {
 	*/
 
 	// sphere
-
+	// sphere geometry
 	var ballGeo = new THREE.SphereGeometry( ballSize, 20, 20 );
+	// sphere material
 	ballMaterial = new THREE.MeshPhongMaterial( {
 		color: 0xaaaaaa,
 		side: THREE.DoubleSide,
 		transparent: true,
 		opacity:0.01
 	} );
-
+	// sphere mesh
 	sphere = new THREE.Mesh( ballGeo, ballMaterial );
 	sphere.castShadow = true;
 	sphere.receiveShadow = true;
-	scene.add( sphere );
+	scene.add( sphere ); // add sphere to scene
 
 	// ground
 
 	/*
+	// needed for ground texture
 	var groundTexture = loader.load( "textures/terrain/grasslight-big.jpg" );
 	groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
 	groundTexture.repeat.set( 25, 25 );
 	groundTexture.anisotropy = 16;
 	*/
 
+	// ground material
 	groundMaterial = new THREE.MeshPhongMaterial(
 		{
 			color: 0x404761,//0x3c3c3c,
@@ -172,83 +168,51 @@ function init() {
 			//map: groundTexture
 		} );
 
+	// ground mesh
 	var mesh = new THREE.Mesh( new THREE.PlaneBufferGeometry( 20000, 20000 ), groundMaterial );
 	mesh.position.y = -250;
 	mesh.rotation.x = - Math.PI / 2;
 	mesh.receiveShadow = true;
-	scene.add( mesh );
+	scene.add( mesh ); // add ground to scene
 
 	// poles
 
 	var poleGeo = new THREE.BoxGeometry( 5, 250+125, 5 );
 	poleMat = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0x111111, shininess: 100, side: THREE.DoubleSide} );
 
-	var mesh = new THREE.Mesh( poleGeo, poleMat );
-	mesh.position.x = -250;
-	mesh.position.z = 250;
-	mesh.position.y = -(125-125/2);
-	mesh.receiveShadow = true;
-	mesh.castShadow = true;
-	scene.add( mesh );
+	var pole1 = new THREE.Mesh( poleGeo, poleMat );
+	pole1.position.x = -250;
+	pole1.position.z = 250;
+	pole1.position.y = -(125-125/2);
+	pole1.receiveShadow = true;
+	pole1.castShadow = true;
+	scene.add( pole1 );
 
-	var mesh = new THREE.Mesh( poleGeo, poleMat );
-	mesh.position.x = 250;
-	mesh.position.z = 250;
-	mesh.position.y = -(125-125/2);
-	mesh.receiveShadow = true;
-	mesh.castShadow = true;
-	scene.add( mesh );
+	var pole2 = new THREE.Mesh( poleGeo, poleMat );
+	pole2.position.x = 250;
+	pole2.position.z = 250;
+	pole2.position.y = -(125-125/2);
+	pole2.receiveShadow = true;
+	pole2.castShadow = true;
+	scene.add( pole2 );
 
-	var mesh = new THREE.Mesh( poleGeo, poleMat );
-	mesh.position.x = 250;
-	mesh.position.z = -250;
-	mesh.position.y = -(125-125/2);
-	mesh.receiveShadow = true;
-	mesh.castShadow = true;
-	scene.add( mesh );
+	var pole3 = new THREE.Mesh( poleGeo, poleMat );
+	pole3.position.x = 250;
+	pole3.position.z = -250;
+	pole3.position.y = -(125-125/2);
+	pole3.receiveShadow = true;
+	pole3.castShadow = true;
+	scene.add( pole3 );
 
-	var mesh = new THREE.Mesh( poleGeo, poleMat );
-	mesh.position.x = -250;
-	mesh.position.z = -250;
-	mesh.position.y = -62;
-	mesh.receiveShadow = true;
-	mesh.castShadow = true;
-	scene.add( mesh );
+	var pole4 = new THREE.Mesh( poleGeo, poleMat );
+	pole4.position.x = -250;
+	pole4.position.z = -250;
+	pole4.position.y = -62;
+	pole4.receiveShadow = true;
+	pole4.castShadow = true;
+	scene.add( pole4 );
 
-/*
-  var mesh = new THREE.Mesh( new THREE.BoxGeometry( 500, 5, 5 ), poleMat );
-	mesh.position.x = 0;
-	mesh.position.z = 250;
-	mesh.position.y = 125;
-	mesh.receiveShadow = true;
-	mesh.castShadow = true;
-	scene.add( mesh );
-
-  var mesh = new THREE.Mesh( new THREE.BoxGeometry( 500, 5, 5 ), poleMat );
-	mesh.position.x = 0;
-	mesh.position.z = -250;
-	mesh.position.y = 125;
-	mesh.receiveShadow = true;
-	mesh.castShadow = true;
-	scene.add( mesh );
-
-  var mesh = new THREE.Mesh( new THREE.BoxGeometry( 5, 5, 500 ), poleMat );
-	mesh.position.x = 250;
-	mesh.position.z = 0;
-	mesh.position.y = 125;
-	mesh.receiveShadow = true;
-	mesh.castShadow = true;
-	scene.add( mesh );
-
-  var mesh = new THREE.Mesh( new THREE.BoxGeometry( 5, 5, 500 ), poleMat );
-	mesh.position.x = -250;
-	mesh.position.z = 0;
-	mesh.position.y = 125;
-	mesh.receiveShadow = true;
-	mesh.castShadow = true;
-	scene.add( mesh );
-*/
-
+	// create a table mesh
   	table = new THREE.Mesh( new THREE.BoxGeometry( 250, 100, 250 ), ballMaterial );
 	table.position.x = 0;
 	table.position.y = 0;
@@ -257,49 +221,25 @@ function init() {
 	table.castShadow = true;
 	scene.add( table );
 
-/*
-	var gg = new THREE.BoxGeometry( 10, 10, 10 );
-	var mesh = new THREE.Mesh( gg, poleMat );
-	mesh.position.y = -250;
-	mesh.position.x = 125;
-	mesh.receiveShadow = true;
-	mesh.castShadow = true;
-	scene.add( mesh );
-
-	var mesh = new THREE.Mesh( gg, poleMat );
-	mesh.position.y = -250;
-	mesh.position.x = -125;
-	mesh.receiveShadow = true;
-	mesh.castShadow = true;
-	scene.add( mesh );
-*/
-
-
 	window.addEventListener( 'resize', onWindowResize, false );
 
+	// start off with the sphere and table invisible
 	sphere.visible = false;
 	table.visible = false;
 
+	// createBall and createTable are functions which tell the cloth to watch out for collisions with the ball or table
 	//createBall();
-	createTable();
-
-	//ballMaterial.color.setHex(0x030303);
-	//poleMat.color.setHex(0x030303);
+	createTable(); // we'll start the scene off with a table for the cloth to collide into
 
 }
-
-//
 
 function onWindowResize() {
 
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
-
 	renderer.setSize( window.innerWidth, window.innerHeight );
 
 }
-
-//
 
 function animate() {
 
@@ -318,8 +258,6 @@ function animate() {
 // and therefore need to recreate the cloth object from scratch
 function restartCloth()
 {
-
-
 		scene.remove(object);
 		//clothInitialPosition = plane( 500, 500 );
 		cloth = new Cloth( xSegs, ySegs, fabricLength );
@@ -327,19 +265,16 @@ function restartCloth()
 		GRAVITY = 9.81 * weight; //
 		gravity = new THREE.Vector3( 0, - GRAVITY, 0 ).multiplyScalar( MASS );
 
+		// recreate cloth geometry
 		clothGeometry = new THREE.ParametricGeometry( clothInitialPosition, xSegs, ySegs );
 		clothGeometry.dynamic = true;
 
-		// cloth mesh
-
-		// a mesh takes the geometry and applies a material to it
+		// recreate cloth mesh
 		object = new THREE.Mesh( clothGeometry, clothMaterial );
 		object.position.set( 0, 0, 0 );
 		object.castShadow = true;
 
 		scene.add( object ); // adds the cloth to the scene
-
-
 }
 
 // the rendering happens here
@@ -348,39 +283,32 @@ function render() {
 
 	var timer = Date.now() * 0.0002;
 
-	var p = cloth.particles;
 
 	// update position of the cloth
-	// from the cloth particles to the cloth geometry
+	// i.e. copy positions from the particles (i.e. result of physics simulation)
+	// to the cloth geometry
+	var p = cloth.particles;
 	for ( var i = 0, il = p.length; i < il; i ++ ) {
-
 		clothGeometry.vertices[ i ].copy( p[ i ].position );
-
 	}
 
+	// recalculate cloth normals
 	clothGeometry.computeFaceNormals();
 	clothGeometry.computeVertexNormals();
 
 	clothGeometry.normalsNeedUpdate = true;
 	clothGeometry.verticesNeedUpdate = true;
 
+	// update sphere position from ball position
 	sphere.position.copy( ballPosition );
 
+	// option to auto-rotate camera
 	if ( rotate ) {
-
 		var cameraRadius = Math.sqrt(camera.position.x*camera.position.x + camera.position.z*camera.position.z);
 		camera.position.x = Math.cos( timer ) * cameraRadius;
 		camera.position.z = Math.sin( timer ) * cameraRadius;
-
 	}
 
 	camera.lookAt( scene.position );
-
-	renderer.render( scene, camera );
-
-}
-
-
-function map(n, start1, stop1, start2, stop2) {
-  return ((n-start1)/(stop1-start1))*(stop2-start2)+start2;
+	renderer.render( scene, camera ); // render the scene
 }

@@ -1,14 +1,4 @@
-/*
- * Cloth Simulation using a relaxed constrains solver
- */
-
-// Suggested Readings
-
-// Advanced Character Physics by Thomas Jakobsen Character
-// http://freespace.virgin.net/hugo.elias/models/m_cloth.htm
-// http://en.wikipedia.org/wiki/Cloth_modeling
-// http://cg.alexandra.dk/tag/spring-mass-system/
-// Real-time Cloth Animation http://www.darwin3d.com/gamedev/articles/col0599.pdf
+// Drape - a fabric simulation software
 
 var guiEnabled = true;
 
@@ -430,11 +420,11 @@ function Cloth( w, h, l ) {
 
   this.index = index;
 
-
-
 }
 
-var startTime, stopTime;
+function map(n, start1, stop1, start2, stop2) {
+  return ((n-start1)/(stop1-start1))*(stop2-start2)+start2;
+}
 
 function simulate( time ) {
 
@@ -448,43 +438,35 @@ function simulate( time ) {
   var i, il, particles, particle, pt, constrains, constrain;
 
   // Aerodynamics forces
-  if ( wind ) {
+  if ( wind )
+  {
 
     windStrength = Math.cos( time / 7000 ) * 20 + 40;
-    //windForce.set( Math.sin( time / 2000 ), Math.sin( time / 3000 ), Math.cos( time / 1000 ) ).normalize().multiplyScalar( windStrength );
     windForce.set(
       Math.sin( time / 2000 ),
       Math.cos( time / 3000 ),
       Math.sin( time / 1000 )
       ).normalize().multiplyScalar( windStrength);
 
-
+    // apply the wind force to the cloth particles
     var face, faces = clothGeometry.faces, normal;
-
     particles = cloth.particles;
-
     for ( i = 0, il = faces.length; i < il; i ++ ) {
-
       face = faces[ i ];
       normal = face.normal;
-
       tmpForce.copy( normal ).normalize().multiplyScalar( normal.dot( windForce ) );
       particles[ face.a ].addForce( tmpForce );
       particles[ face.b ].addForce( tmpForce );
       particles[ face.c ].addForce( tmpForce );
-
     }
 
   }
 
-  for ( particles = cloth.particles, i = 0, il = particles.length
-      ; i < il; i ++ ) {
-
+  for ( particles = cloth.particles, i = 0, il = particles.length ; i < il; i ++ )
+  {
     particle = particles[ i ];
     particle.addForce( gravity );
-
     particle.integrate( TIMESTEP_SQ ); // performs verlet integration
-
   }
 
   // Start Constrains
@@ -492,160 +474,112 @@ function simulate( time ) {
   constrains = cloth.constrains,
   il = constrains.length;
   for ( i = 0; i < il; i ++ ) {
-
     constrain = constrains[ i ];
     satisifyConstrains( constrain[ 0 ], constrain[ 1 ], constrain[ 2 ], constrain[ 3] );
-
   }
 
     ballPosition.y = 50*Math.sin(Date.now()/600);
     ballPosition.x = 50*Math.sin(Date.now()/600);
     ballPosition.z = 50*Math.cos(Date.now()/600);
 
-    sphere.position.copy( ballPosition );
-
-
-    startTime = Date.now();
+    sphere.position.copy( ballPosition ); //maybe remove this since it's also in render()
 
     if(!newCollisionDetection){
       if(sphere.visible){
 
-        for ( particles = cloth.particles, i = 0, il = particles.length
-            ; i < il; i ++ ) {
+        for ( particles = cloth.particles, i = 0, il = particles.length; i < il; i ++ )
+        {
 
           particle = particles[ i ];
           pos = particle.position;
           diff.subVectors( pos, ballPosition );
           if ( diff.length() < ballSize ) {
-
             // collided
             diff.normalize().multiplyScalar( ballSize );
             pos.copy( ballPosition ).add( diff );
-
           }
-
         }
       }
-
     }
 
     else if(newCollisionDetection){
 
+      for ( particles = cloth.particles, i = 0, il = particles.length; i < il; i ++ )
+      {
+
+        particle = particles[ i ];
+        whereAmI = particle.position;
+        whereWasI = particle.previous;
+
+        diff.subVectors(whereAmI,whereWasI);
+        directionOfMotion = diff.clone().normalize();
+
+        ray.set(whereWasI, directionOfMotion); // set origin and direction of a ray
+        collisionResults = ray.intersectObjects( collidableMeshList ); // calculate intersections of this ray with stuff
 
 
-    for ( particles = cloth.particles, i = 0, il = particles.length
-        ; i < il; i ++ ) {
+        if(collisionResults.length > 0){
 
-      particle = particles[ i ];
-      whereAmI = particle.position;
-      whereWasI = particle.previous;
+          if(collisionResults.length %2==0 && collisionResults[0].distance < diff.length()){
+          // if ray cast from our starting point makes an even number of intersections (i.e. we WERE outside)
+          // AND distance to collision is less than distance covered in this frame
+          // then we're about to collide
+          // console.log("particle "+i+ " struck an object at time " + time);
 
-      diff.subVectors(whereAmI,whereWasI);
-      directionOfMotion = diff.clone().normalize();
+          // so take appropriate action to avoid this collision
 
-      ray.set(whereWasI, directionOfMotion); // set origin and direction of a ray
-      collisionResults = ray.intersectObjects( collidableMeshList ); // calculate intersections of this ray with stuff
+            ray.set(whereAmI, collisionResults[0].face.normal);
+            newCollisionResults = ray.intersectObjects( [collisionResults[0].object] );
 
-
-      if(collisionResults.length > 0){
-        //console.log(collisionResults.length);
-
-
-
-        if(collisionResults.length %2==0 && collisionResults[0].distance < diff.length()){
-        // if ray cast from our starting point makes an even number of intersections (i.e. we WERE outside)
-        // AND distance to collision is less than distance covered in this frame
-        // then we're about to collide
-        // console.log("particle "+i+ " struck an object at time " + time);
-
-        // so take appropriate action to avoid this collision
-
-          ray.set(whereAmI, collisionResults[0].face.normal);
-          newCollisionResults = ray.intersectObjects( [collisionResults[0].object] );
-
-          if(newCollisionResults.length>0){
-            diff.subVectors( newCollisionResults[0].point, collisionResults[0].object.position );
-            diff.multiplyScalar( 1 + Math.pow(10,-3));
-            newPosition.copy(collisionResults[0].object.position).add( diff ).multiplyScalar(1-friction);
-            if(whereWasI.distanceTo(newPosition) > -1){
-              oldPosition.copy(whereWasI).multiplyScalar(friction);
-              whereAmI.addVectors(newPosition,oldPosition);
-            }
-            else{
-              whereAmI.copy(newPosition);
+            if(newCollisionResults.length>0){
+              diff.subVectors( newCollisionResults[0].point, collisionResults[0].object.position );
+              diff.multiplyScalar( 1 + Math.pow(10,-3));
+              newPosition.copy(collisionResults[0].object.position).add( diff ).multiplyScalar(1-friction);
+              if(whereWasI.distanceTo(newPosition) > -1){
+                oldPosition.copy(collisionResults[0].point).multiplyScalar(friction);
+                whereAmI.addVectors(newPosition,oldPosition);
+              }
+              else{
+                whereAmI.copy(newPosition);
+              }
             }
           }
 
+            else if(collisionResults.length % 2 == 1){
+              // if the ray being cast intersects objects an odd numner of times
+              // it means we're already inside an object
+              // i.e. we've already collided in the past. So take appropriate action
+              // console.log("particle "+i+ " is inside an object at time " + time);
+
+              // response: push particles outside
+              objectCenter.copy(collisionResults[0].object.position);
+              diff.subVectors( whereAmI, objectCenter ).normalize();
+              ray.set(objectCenter,diff);
+              newCollisionResults = ray.intersectObjects([collisionResults[0].object]);
+              diff.subVectors( newCollisionResults[0].point, collisionResults[0].object.position );
+              diff.multiplyScalar( 1 + Math.pow(10,-3));
+              whereAmI.copy(collisionResults[0].object.position).add( diff );
+
+            }
+          }
         }
-
-
-          else if(collisionResults.length % 2 == 1){
-            // if the ray being cast intersects objects an odd numner of times
-            // it means we're already inside an object
-            // i.e. we've already collided in the past. So take appropriate action
-            // console.log("particle "+i+ " is inside an object at time " + time);
-
-            // response: push particles outside
-            objectCenter.copy(collisionResults[0].object.position);
-            diff.subVectors( whereAmI, objectCenter ).normalize();
-            ray.set(objectCenter,diff);
-            newCollisionResults = ray.intersectObjects([collisionResults[0].object]);
-            diff.subVectors( newCollisionResults[0].point, collisionResults[0].object.position );
-            diff.multiplyScalar( 1 + Math.pow(10,-3));
-            whereAmI.copy(collisionResults[0].object.position).add( diff );
-
-          }
-
-
-
       }
-
-  }
-
-
-
-    }
-
-  stopTime = Date.now();
-  //console.log(stopTime-startTime);
 
   // Floor Constains
   for ( particles = cloth.particles, i = 0, il = particles.length
-      ; i < il; i ++ ) {
-
+      ; i < il; i ++ )
+  {
     particle = particles[ i ];
     pos = particle.position;
-    if ( pos.y < - 249 ) {
-
-      pos.y = - 249;
-
-    }
-
+    if ( pos.y < - 249 ) {pos.y = - 249;}
   }
 
   // Pin Constrains
-
   if(pinned){
     particles[cloth.index(0,0)].lockToOriginal();
     particles[cloth.index(xSegs,0)].lockToOriginal();
     particles[cloth.index(0,ySegs)].lockToOriginal();
     particles[cloth.index(xSegs,ySegs)].lockToOriginal();
-
-    //particles[cloth.index(xSegs/2,0)].lockToOriginal();
-    //particles[cloth.index(0,ySegs/2)].lockToOriginal();
-    //particles[cloth.index(xSegs/2,ySegs)].lockToOriginal();
-    //particles[cloth.index(xSegs,ySegs/2)].lockToOriginal();
-
   }
-
-/*
-  for ( i = 0, il = pins.length; i < il; i ++ ) {
-
-    var xy = pins[ i ];
-    var p = particles[ xy ];
-    p.lock();
-
-  }
-*/
 
 }
