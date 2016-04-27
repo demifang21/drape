@@ -10,8 +10,8 @@ var groundMaterial;
 
 var sphere;
 var table;
+var boundingBox;
 var object;
-var ballPositionOffset;
 var collidableMeshList = [];
 
 var rotate = true;
@@ -123,6 +123,7 @@ function init() {
 
 	// whenever we make something, we need to also add it to the scene
 	scene.add( object ); // add cloth to the scene
+	//collidableMeshList.push(object);
 
 	/*
 	// more stuff needed for texture
@@ -213,13 +214,19 @@ function init() {
 	scene.add( pole4 );
 
 	// create a table mesh
-  	table = new THREE.Mesh( new THREE.BoxGeometry( 250, 100, 250 ), ballMaterial );
+	var boxGeo = new THREE.BoxGeometry( 250, 100, 250 );
+  	table = new THREE.Mesh( boxGeo, ballMaterial );
 	table.position.x = 0;
 	table.position.y = 0;
 	table.position.z = 0;
 	table.receiveShadow = true;
 	table.castShadow = true;
 	scene.add( table );
+
+	boxGeo.computeBoundingBox();
+	boundingBox = table.geometry.boundingBox.clone();
+
+	//console.log('bounding box coordinates: ' + '(' + boundingBox.min.x + ', ' + boundingBox.min.y + ', ' + boundingBox.min.z + '), ' + '(' + boundingBox.max.x + ', ' + boundingBox.max.y + ', ' + boundingBox.max.z + ')' );
 
 	window.addEventListener( 'resize', onWindowResize, false );
 
@@ -228,8 +235,8 @@ function init() {
 	table.visible = false;
 
 	// createBall and createTable are functions which tell the cloth to watch out for collisions with the ball or table
-	//createBall();
-	createTable(); // we'll start the scene off with a table for the cloth to collide into
+	createBall();
+	//createTable(); // we'll start the scene off with a table for the cloth to collide into
 
 }
 
