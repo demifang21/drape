@@ -1,4 +1,6 @@
 // Drape - a fabric simulation software
+// Built using three.js starting from the simple cloth simulation
+// http://threejs.org/examples/#webgl_animation_cloth
 
 var guiEnabled = true;
 
@@ -20,14 +22,18 @@ var springStiffnessS = 1;
 
 var friction = 0.9; // similar to coefficient of friction. 0 = frictionless, 1 = cloth sticks in place
 
-var xSegs = 10; // how many particles wide is the cloth
-var ySegs = 10; // how many particles tall is the cloth
+var xSegs = 30; // how many particles wide is the cloth
+var ySegs = 30; // how many particles tall is the cloth
 
-var fabricLength = 500; // sets the size of the cloth
+var fabricLength = 600; // sets the size of the cloth
 var restDistance = fabricLength/xSegs;
 
 var weight = 140;
-var newCollisionDetection = true;
+//var newCollisionDetection = true;
+
+var wind = true;
+var windStrength;
+var windForce = new THREE.Vector3( 0, 0, 0 );
 
 if(guiEnabled){
 
@@ -41,10 +47,12 @@ if(guiEnabled){
     this.particles = xSegs;
     //this.particlesWide = xSegs;
     //this.particlesLong = ySegs;
-    this.newCollisionDetection = newCollisionDetection;
+    //this.newCollisionDetection = newCollisionDetection;
     //this.damping = DAMPING;
 
     this.weight = weight;
+
+    //this.windStrength = windStrength;
 
     this.fabricLength = fabricLength;
     this.structuralSprings = structuralSprings;
@@ -85,10 +93,11 @@ if(guiEnabled){
 
   var f2 = gui.addFolder('Fabric Physics');
 
-  f2.add(guiControls, 'newCollisionDetection').name('use raycasting').onChange(function(value){newCollisionDetection = value;});
+  //f2.add(guiControls, 'newCollisionDetection').name('use raycasting').onChange(function(value){newCollisionDetection = value;});
   f2.add(guiControls, 'friction', 0, 1).onChange(function(value){friction = value;});
   f2.add(guiControls, 'weight', 0, 500).step(1).onChange(function(value){weight = value; restartCloth();});
   f2.add(guiControls, 'particles', 10, 50).step(1).onChange(function(value){xSegs = value; ySegs = value; restartCloth();});
+  //f2.add(guiControls, 'windStrength', 0, 4).name('wind strength').onChange(function(value){windStrength = value;});
 
 
   var f3 = gui.addFolder('Colors');
@@ -120,11 +129,8 @@ var TIMESTEP = 18 / 1000;
 var TIMESTEP_SQ = TIMESTEP * TIMESTEP;
 
 //var pins = [];
-var pinned = false;
+var pinned = true;
 
-var wind = true;
-var windStrength = 2;
-var windForce = new THREE.Vector3( 0, 0, 0 );
 
 var ballSize = 500/4; //40
 var ballPosition = new THREE.Vector3( 0, -250+ballSize, 0 );
@@ -136,9 +142,10 @@ var lastTime;
 
 var pos;
 
-var ray = new THREE.Raycaster();
-var collisionResults, newCollisionResults;
-var whereAmI, whereWasI, directionOfMotion, distanceTraveled;
+// var ray = new THREE.Raycaster();
+// var collisionResults, newCollisionResults;
+var whereAmI, whereWasI;
+// var directionOfMotion, distanceTraveled;
 
 var posFriction = new THREE.Vector3( 0, 0, 0 );
 var posNoFriction = new THREE.Vector3( 0, 0, 0 );
@@ -146,27 +153,30 @@ var posNoFriction = new THREE.Vector3( 0, 0, 0 );
 var diff = new THREE.Vector3();
 var objectCenter = new THREE.Vector3();
 
+var a,b,c,d,e,f;
+
+var nearestX, nearestY, nearestZ;
+var currentX, currentY, currentZ;
+var xDist, yDist, zDist;
+
 function createBall(){
   sphere.visible = !sphere.visible;
-  if(sphere.visible){
-    collidableMeshList.push(sphere);
-    if(table.visible){createTable();}
-  }
-  else{
-    var i = collidableMeshList.indexOf(sphere);
-    collidableMeshList.splice(i, 1);
-  }
+  if(table.visible){table.visible = false;}
+  if(sphere.visible){restartCloth();}
 }
 
 function createTable(){
+
   table.visible = !table.visible;
+  if(sphere.visible){sphere.visible = false;}
   if(table.visible){
-    collidableMeshList.push(table);
-    if(sphere.visible){createBall();}
-  }
-  else{
-    var i = collidableMeshList.indexOf(table);
-    collidableMeshList.splice(i, 1);
+    a = boundingBox.min.x;
+    b = boundingBox.min.y;
+    c = boundingBox.min.z;
+    d = boundingBox.max.x;
+    e = boundingBox.max.y;
+    f = boundingBox.max.z;
+    restartCloth();
   }
 }
 
@@ -476,11 +486,9 @@ function simulate( time ) {
   }
 
     prevBallPosition.copy(ballPosition);
-
     ballPosition.y = 50*Math.sin(Date.now()/600);
     ballPosition.x = 50*Math.sin(Date.now()/600);
     ballPosition.z = 50*Math.cos(Date.now()/600);
-
     sphere.position.copy( ballPosition ); //maybe remove this since it's also in render()
 
     for ( particles = cloth.particles, i = 0, il = particles.length; i < il; i ++ )
@@ -502,12 +510,15 @@ function simulate( time ) {
           posNoFriction.copy( ballPosition ).add( diff );
 
           diff.subVectors(whereWasI,ballPosition);
-          if (! diff.length()<ballSize ) {
+
+          if (!diff.length()<ballSize ) {
             // with friction
             diff.subVectors(ballPosition,prevBallPosition);
             posFriction.copy(whereWasI).add(diff);
 
-            whereAmI.copy(posFriction.multiplyScalar(friction).add(posNoFriction.multiplyScalar(1-friction)));
+            posNoFriction.multiplyScalar(1-friction);
+            posFriction.multiplyScalar(friction);
+            whereAmI.copy(posFriction.add(posNoFriction));
           }
           else{
             whereAmI.copy(posNoFriction);
@@ -522,18 +533,9 @@ function simulate( time ) {
 
           // no friction
 
-          var currentX = whereAmI.x;
-          var currentY = whereAmI.y;
-          var currentZ = whereAmI.z;
-
-          var nearestX, nearestY, nearestZ;
-
-          var a = boundingBox.min.x;
-          var b = boundingBox.min.y;
-          var c = boundingBox.min.z;
-          var d = boundingBox.max.x;
-          var e = boundingBox.max.y;
-          var f = boundingBox.max.z;
+          currentX = whereAmI.x;
+          currentY = whereAmI.y;
+          currentZ = whereAmI.z;
 
           if(currentX <= (a + d)/2){nearestX = a;}
           else{nearestX = d;}
@@ -544,9 +546,9 @@ function simulate( time ) {
           if(currentZ <= (c + f)/2){nearestZ = c;}
           else{nearestZ = f;}
 
-          var xDist = Math.abs(nearestX-currentX);
-          var yDist = Math.abs(nearestY-currentY);
-          var zDist = Math.abs(nearestZ-currentZ);
+          xDist = Math.abs(nearestX-currentX);
+          yDist = Math.abs(nearestY-currentY);
+          zDist = Math.abs(nearestZ-currentZ);
 
           posNoFriction.copy(whereAmI);
 

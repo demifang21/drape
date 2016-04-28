@@ -39,8 +39,8 @@ function init() {
 	scene.add( camera );
 
 	// renderer (Third thing you need is a renderer)
-	renderer = new THREE.WebGLRenderer( { antialias: true } );
-	renderer.setPixelRatio( window.devicePixelRatio );
+	renderer = new THREE.WebGLRenderer( { antialias: true, devicePixelRatio: 1 } );
+	//renderer.setPixelRatio( window.devicePixelRatio );
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.setClearColor( scene.fog.color );
 	//renderer.setClearColor(0xffffff);
