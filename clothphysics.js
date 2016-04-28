@@ -66,11 +66,11 @@ if(guiEnabled){
     this.shearSpringLengthMultiplier = restDistanceS;
     //this.shearSpringStiffness = springStiffnessS;
 
-    this.clothColor = 0x030303;
+    this.clothColor = 0xaa2929;
     this.clothSpecular = 0x030303;
 
-    this.groundColor = 0x3c3c3c;
-    this.groundSpecular = 0x3c3c3c;
+    this.groundColor = 0x404761;
+    this.groundSpecular = 0x404761;
 
     this.fogColor = 0xcce0ff;
 
@@ -505,14 +505,17 @@ function simulate( time ) {
         if ( diff.length() < ballSize ) {
           // if yes, we've collided, so take correcting action
 
-          // no friction
+          // no friction behavior:
+          // project point out to nearest point on sphere surface
           diff.normalize().multiplyScalar( ballSize );
           posNoFriction.copy( ballPosition ).add( diff );
 
           diff.subVectors(whereWasI,ballPosition);
 
-          if (!diff.length()<ballSize ) {
-            // with friction
+          if (!diff.length()<ballSize ) { // if statement added for bugfix
+            // with friction behavior:
+            // add the distance that the sphere moved in the last frame
+            // to the previous position of the particle
             diff.subVectors(ballPosition,prevBallPosition);
             posFriction.copy(whereWasI).add(diff);
 
@@ -531,8 +534,8 @@ function simulate( time ) {
         if(boundingBox.containsPoint(whereAmI)){
           // if yes, we've collided, so take correcting action
 
-          // no friction
-
+          // no friction behavior:
+          // place point at the nearest point on the surface of the cube
           currentX = whereAmI.x;
           currentY = whereAmI.y;
           currentZ = whereAmI.z;
@@ -565,8 +568,9 @@ function simulate( time ) {
             posNoFriction.x = nearestX;
           }
 
-          // with friction
-          if(!boundingBox.containsPoint(whereWasI)){
+          if(!boundingBox.containsPoint(whereWasI)){ // if statement added for bugfix
+            // with friction behavior:
+            // set particle to its previous position
             posFriction.copy(whereWasI);
             whereAmI.copy(posFriction.multiplyScalar(friction).add(posNoFriction.multiplyScalar(1-friction)));
           }
@@ -575,8 +579,6 @@ function simulate( time ) {
           }
         }
       }
-
-      // use raycaster for cloth-cloth collision detections
 
     }
 
