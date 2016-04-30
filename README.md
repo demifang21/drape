@@ -1,36 +1,31 @@
-# Drape
-A fabric design and simulation tool, built in [three.js](http://threejs.org/) starting from the [cloth simulation](http://threejs.org/examples/webgl_animation_cloth) example.
-
-## To run online:
-You can test the code at the following links:
-
-[Latest version](https://gitcdn.xyz/repo/aatishb/drape/master/index.html)
+# [Drape](https://gitcdn.xyz/repo/aatishb/drape/master/index.html)
+A [fabric design and simulation tool](https://gitcdn.xyz/repo/aatishb/drape/master/index.html), built in [three.js](http://threejs.org/).
 
 Changelog:
-- April 12: improved collision detection (detects collisions with arbitrarily shaped static or moving objects), more intuitive GUI controls, made objects transparent
+- April 27: optimized collision detection (order of magnitude speedup by getting rid of raytracing)
+- April 12: improved collision detection, more intuitive GUI controls, made objects transparent
 - April 5: added sliders GUI, mouse control (scroll to zoom, drag mouse to change view)
 - March 22: added shear & bending springs, collision detection, friction, wireframe view
 
+[TODO](https://github.com/aatishb/drape/issues/8)
+
+## To run online:
+
+You can find the latest version of Drape [here](https://gitcdn.xyz/repo/aatishb/drape/master/index.html)
+
 ## To run on your own computer:
+
+If you're interested in developing drape further, you'll want to download the code and run it locally. Here's how to do that:
 
 1. Download code and unzip
 2. Easiest way to run: Open one of the .js files with the [p5 editor](http://p5js.org/download/) and press play
 3. Alternatively, run the code with a local server (instructions [here](https://github.com/mrdoob/three.js/wiki/How-to-run-things-locally) or [here](https://github.com/processing/p5.js/wiki/Local-server)).
 
-## TODO
+## Credits
 
-[Code overview] (https://goo.gl/5M8SwK) – overview of code organization
+Drape is developed by Aatish Bhatia, Demi Fang, Sigrid Adriaenssens, and was created in [three.js](http://threejs.org/), by building on the [cloth simulation](http://threejs.org/examples/webgl_animation_cloth) example.
 
-Stuff to implement:
-
-1. ~~Collision detection~~ (implemented point-face collision. also add edge-edge collision?)
-2. ~~Bending & shear springs~~
-3. Prevent cloth self-intersections
-4. ~~GUI~~
-5. Explore different methods of interaction
-6. Optimize collision detection (particularly for sphere)
-
-## References
+## More Reading
 
 1. [GPU Ray-Traced Collision Detection for Cloth Simulation](https://hal.inria.fr/hal-01218186/document) (2015)
 2. [Ray-traced collision detection for deformable bodies](https://hal.inria.fr/file/index/docid/319404/filename/grapp08.pdf) (2008)
