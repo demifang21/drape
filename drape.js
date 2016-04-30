@@ -14,7 +14,6 @@ var boundingBox;
 var object;
 var collidableMeshList = [];
 
-var rotate = true;
 
 var gui;
 var guiControls;
@@ -235,7 +234,8 @@ function init() {
 	table.visible = false;
 
 	// createBall and createTable are functions which tell the cloth to watch out for collisions with the ball or table
-	createBall();
+	createThing('Ball');
+	//createBall();
 	//createTable(); // we'll start the scene off with a table for the cloth to collide into
 
 }
@@ -269,7 +269,7 @@ function restartCloth()
 		//clothInitialPosition = plane( 500, 500 );
 		cloth = new Cloth( xSegs, ySegs, fabricLength );
 
-		GRAVITY = 9.81 * weight; //
+		//GRAVITY = 9.81 * 140; //
 		gravity = new THREE.Vector3( 0, - GRAVITY, 0 ).multiplyScalar( MASS );
 
 		// recreate cloth geometry

@@ -12,13 +12,8 @@ var DAMPING = 0.03;
 var DRAG = 1 - DAMPING;
 var MASS = .1;
 
-var springStiffness = 1; // number between 0 and 1. smaller = springier, bigger = stiffer
-
 var restDistanceB = 2;
-var springStiffnessB = 1;
-
 var restDistanceS = Math.sqrt(2);
-var springStiffnessS = 1;
 
 var friction = 0.9; // similar to coefficient of friction. 0 = frictionless, 1 = cloth sticks in place
 
@@ -26,14 +21,18 @@ var xSegs = 30; // how many particles wide is the cloth
 var ySegs = 30; // how many particles tall is the cloth
 
 var fabricLength = 600; // sets the size of the cloth
-var restDistance = fabricLength/xSegs;
+var restDistance; // = fabricLength/xSegs;
 
-var weight = 140;
 //var newCollisionDetection = true;
 
 var wind = true;
 var windStrength;
 var windForce = new THREE.Vector3( 0, 0, 0 );
+
+var rotate = false;
+var pinned = true;
+var thing = 'Ball';
+
 
 if(guiEnabled){
 
@@ -41,30 +40,22 @@ if(guiEnabled){
   //sliders
 
   guiControls = new function(){
-    //this.cameraHeight = 450;
-    //this.particleMass = MASS*10;
     this.friction = friction;
     this.particles = xSegs;
-    //this.particlesWide = xSegs;
-    //this.particlesLong = ySegs;
-    //this.newCollisionDetection = newCollisionDetection;
-    //this.damping = DAMPING;
+    this.rotate = rotate;
 
-    this.weight = weight;
-
-    //this.windStrength = windStrength;
+    this.wind = wind;
+    this.pinned = pinned;
+    this.thing = thing;
 
     this.fabricLength = fabricLength;
     this.structuralSprings = structuralSprings;
-    //this.structuralSpringStiffness = springStiffness;
 
     this.bendingSprings = bendingSprings;
     this.bendingSpringLengthMultiplier = restDistanceB;
-    //this.bendingSpringStiffness = springStiffnessB;
 
     this.shearSprings = shearSprings;
     this.shearSpringLengthMultiplier = restDistanceS;
-    //this.shearSpringStiffness = springStiffnessS;
 
     this.clothColor = 0xaa2929;
     this.clothSpecular = 0x030303;
@@ -78,26 +69,27 @@ if(guiEnabled){
 
   gui = new dat.GUI();
 
-  var f0 = gui.add(guiControls, 'fabricLength', 200, 1000).name('Fabric Length').onChange(function(value){fabricLength = value; restartCloth();});
+  var f0 = gui.add(guiControls, 'fabricLength', 200, 1000).step(20).name('Size').onChange(function(value){fabricLength = value; xSegs = Math.round(value/20); ySegs = Math.round(value/20); restartCloth();});
 
-  var f1 = gui.addFolder('Fabric Weave');
+  var f4 = gui.addFolder('Behavior')
+
+  f4.add(guiControls, 'rotate').name('auto rotate').onChange(function(value){rotate = !rotate;});
+  f4.add(guiControls, 'wind').name('wind').onChange(function(value){wind = !wind;});
+  f4.add(guiControls, 'pinned').name('pin corners').onChange(function(value){pinned = !pinned;});
+  f4.add(guiControls, 'thing', ['None', 'Ball', 'Table']).name('object').onChange(function(value){createThing(value);});
+
+  //f4.add(text, 'Object', ['None', 'Sphere', 'Ball']);
+
+  var f1 = gui.addFolder('Weave');
 
   f1.add(guiControls, 'structuralSprings').name('cross grain').onChange(function(value){structuralSprings = value; restartCloth();});
-  //f1.add(guiControls, 'structuralSpringStiffness', 0, 1).name('stiffness').onChange(function(value){springStiffness = value; restartCloth();});
   f1.add(guiControls, 'shearSprings').name('bias grain').onChange(function(value){shearSprings = value; restartCloth();});
-  //f1.add(guiControls, 'shearSpringStiffness', 0, 1).name('stiffness').onChange(function(value){springStiffnessS = value; restartCloth();});
-  //f1.add(guiControls, 'shearSpringLengthMultiplier', 1, 2).name('multiplier').onChange(function(value){restDistanceS = value; restartCloth();});
   f1.add(guiControls, 'bendingSprings').name('drape').onChange(function(value){bendingSprings = value; restartCloth();});
-  //f1.add(guiControls, 'bendingSpringStiffness', 0, 1).name('stiffness').onChange(function(value){springStiffnessB = value; restartCloth();});
-  //f1.add(guiControls, 'bendingSpringLengthMultiplier', 1.5, 2.5).name('multiplier').onChange(function(value){restDistanceB = value; restartCloth();});
 
-  var f2 = gui.addFolder('Fabric Physics');
+  var f2 = gui.addFolder('Physics');
 
-  //f2.add(guiControls, 'newCollisionDetection').name('use raycasting').onChange(function(value){newCollisionDetection = value;});
   f2.add(guiControls, 'friction', 0, 1).onChange(function(value){friction = value;});
-  f2.add(guiControls, 'weight', 0, 500).step(1).onChange(function(value){weight = value; restartCloth();});
-  f2.add(guiControls, 'particles', 10, 50).step(1).onChange(function(value){xSegs = value; ySegs = value; restartCloth();});
-  //f2.add(guiControls, 'windStrength', 0, 4).name('wind strength').onChange(function(value){windStrength = value;});
+  //f2.add(guiControls, 'weight', 0, 500).step(1).onChange(function(value){weight = value; restartCloth();});
 
 
   var f3 = gui.addFolder('Colors');
@@ -107,21 +99,12 @@ if(guiEnabled){
   f3.addColor(guiControls, 'groundSpecular').name('gnd reflection').onChange(function(value){groundMaterial.specular.setHex(value);});
   f3.addColor(guiControls, 'fogColor').onChange(function(value){scene.fog.color.setHex(value); renderer.setClearColor(scene.fog.color);});
 
-  //var f4 = gui.addFolder('Physics');
-
-  //f4.add(guiControls, 'particleMass', 0, 10).onChange(function(value){MASS = value/10; restartCloth();});
-  //f4.add(guiControls, 'damping', 0, 1).onChange(function(value){DAMPING = value; DRAG = 1 - DAMPING; restartCloth();});
-
-  //f4.add(guiControls, 'friction', 0, 1).onChange(function(value){friction = value; restartCloth();});
-
-  gui.remember(guiControls);
-
 }
 
 var clothInitialPosition = plane( 500, 500 );
 var cloth = new Cloth( xSegs, ySegs, fabricLength );
 
-var GRAVITY = 9.81 * weight; //
+var GRAVITY = 9.81 * 140; //
 var gravity = new THREE.Vector3( 0, - GRAVITY, 0 ).multiplyScalar( MASS );
 
 
@@ -129,7 +112,6 @@ var TIMESTEP = 18 / 1000;
 var TIMESTEP_SQ = TIMESTEP * TIMESTEP;
 
 //var pins = [];
-var pinned = true;
 
 
 var ballSize = 500/4; //40
@@ -158,6 +140,34 @@ var a,b,c,d,e,f;
 var nearestX, nearestY, nearestZ;
 var currentX, currentY, currentZ;
 var xDist, yDist, zDist;
+
+function createThing(thing){
+
+  if(thing == 'Ball' || thing == 'ball'){
+    sphere.visible = true;
+    table.visible = false;
+    restartCloth();
+  }
+  else if(thing == 'Table' || thing == 'table'){
+
+    // these variables are used in the table collision detection
+    a = boundingBox.min.x;
+    b = boundingBox.min.y;
+    c = boundingBox.min.z;
+    d = boundingBox.max.x;
+    e = boundingBox.max.y;
+    f = boundingBox.max.z;
+
+    sphere.visible = false;
+    table.visible = true;
+    restartCloth();
+  }
+  else if(thing == 'None' || thing == 'none'){
+    sphere.visible = false;
+    table.visible = false;
+  }
+
+}
 
 function createBall(){
   sphere.visible = !sphere.visible;
@@ -260,12 +270,12 @@ Particle.prototype.integrate = function( timesq ) {
 
 
 
-function satisifyConstrains( p1, p2, distance, stiffness ) {
+function satisifyConstrains( p1, p2, distance) {
 
   diff.subVectors( p2.position, p1.position );
   var currentDist = diff.length();
   if ( currentDist == 0 ) return; // prevents division by 0
-  var correction = diff.multiplyScalar( stiffness*(currentDist - distance) / currentDist);
+  var correction = diff.multiplyScalar( (currentDist - distance) / currentDist);
   var correctionHalf = correction.multiplyScalar( 0.5 );
   p1.position.add( correctionHalf );
   p2.position.sub( correctionHalf );
@@ -279,7 +289,7 @@ function Cloth( w, h, l ) {
   //h = h || 10;
   this.w = w;
   this.h = h;
-  restDistance = l/w;
+  restDistance = l/w; // assuming square cloth for now
 
 
   var particles = [];
@@ -303,8 +313,7 @@ function Cloth( w, h, l ) {
           constrains.push( [
             particles[ index( u, v ) ],
             particles[ index( u, v + 1 ) ],
-            restDistance,
-            springStiffness
+            restDistance
           ] );
         }
 
@@ -312,8 +321,7 @@ function Cloth( w, h, l ) {
           constrains.push( [
             particles[ index( u, v ) ],
             particles[ index( u + 1, v ) ],
-            restDistance,
-            springStiffness
+            restDistance
           ] );
         }
       }
@@ -331,8 +339,7 @@ function Cloth( w, h, l ) {
           constrains.push( [
             particles[ index( u, v ) ],
             particles[ index( u, v+1 ) ],
-            restDistance,
-            springStiffness
+            restDistance
           ] );
         }
 
@@ -340,8 +347,7 @@ function Cloth( w, h, l ) {
           constrains.push( [
             particles[ index( u, v ) ],
             particles[ index( u+1, v ) ],
-            restDistance,
-            springStiffness
+            restDistance
           ] );
         }
 
@@ -362,15 +368,13 @@ function Cloth( w, h, l ) {
         constrains.push([
           particles[index(u, v)],
           particles[index(u+1, v+1)],
-          restDistanceS*restDistance,
-          springStiffnessS
+          restDistanceS*restDistance
         ]);
 
         constrains.push([
           particles[index(u+1, v)],
           particles[index(u, v+1)],
-          restDistanceS*restDistance,
-          springStiffnessS
+          restDistanceS*restDistance
         ]);
       }
 
@@ -394,8 +398,7 @@ function Cloth( w, h, l ) {
           constrains.push( [
             particles[ index( u, v ) ],
             particles[ index( u, v+2 ) ],
-            restDistanceB*restDistance,
-            springStiffnessB
+            restDistanceB*restDistance
           ] );
         }
 
@@ -403,8 +406,7 @@ function Cloth( w, h, l ) {
           constrains.push( [
             particles[ index( u, v ) ],
             particles[ index( u+2, v ) ],
-            restDistanceB*restDistance,
-            springStiffnessB
+            restDistanceB*restDistance
           ] );
         }
 
