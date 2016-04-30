@@ -1,7 +1,7 @@
 # [Drape](https://gitcdn.xyz/repo/aatishb/drape/master/index.html)
 A [fabric design and simulation tool](https://gitcdn.xyz/repo/aatishb/drape/master/index.html), built in [three.js](http://threejs.org/).
 
-Changelog:
+## Change log
 - April 27: optimized collision detection (order of magnitude speedup by getting rid of raytracing)
 - April 12: improved collision detection, more intuitive GUI controls, made objects transparent
 - April 5: added sliders GUI, mouse control (scroll to zoom, drag mouse to change view)
@@ -23,9 +23,11 @@ If you're interested in developing drape further, you'll want to download the co
 
 ## Credits
 
-Drape is developed by Aatish Bhatia, Demi Fang, Sigrid Adriaenssens, and was created in [three.js](http://threejs.org/), by building on the [cloth simulation](http://threejs.org/examples/webgl_animation_cloth) example.
+Drape is developed by Aatish Bhatia, Demi Fang, Sigrid Adriaenssens, and was created in [three.js](http://threejs.org/). Shared under [the MIT License](https://github.com/aatishb/drape/blob/master/LICENSE).
 
 ## More Reading
+
+Some papers that go into the nitty-gritty of cloth simulation.
 
 1. [GPU Ray-Traced Collision Detection for Cloth Simulation](https://hal.inria.fr/hal-01218186/document) (2015)
 2. [Ray-traced collision detection for deformable bodies](https://hal.inria.fr/file/index/docid/319404/filename/grapp08.pdf) (2008)
