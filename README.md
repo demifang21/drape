@@ -23,7 +23,7 @@ If you're interested in developing drape further, you'll want to download the co
 
 ## Credits
 
-Drape is developed by Aatish Bhatia, Demi Fang, Sigrid Adriaenssens, and was created in [three.js](http://threejs.org/). Shared under [the MIT License](https://github.com/aatishb/drape/blob/master/LICENSE).
+Drape is developed by Aatish Bhatia, Demi Fang, Sigrid Adriaenssens, using [three.js](http://threejs.org/). Shared under [the MIT License](https://github.com/aatishb/drape/blob/master/LICENSE).
 
 ## More Reading
 
