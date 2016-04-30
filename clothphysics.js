@@ -514,7 +514,7 @@ function simulate( time ) {
 
           diff.subVectors(whereWasI,ballPosition);
 
-          if (!diff.length()<ballSize ) { // if statement added for bugfix
+          if (diff.length() > ballSize) {
             // with friction behavior:
             // add the distance that the sphere moved in the last frame
             // to the previous position of the particle
@@ -570,7 +570,7 @@ function simulate( time ) {
             posNoFriction.x = nearestX;
           }
 
-          if(!boundingBox.containsPoint(whereWasI)){ // if statement added for bugfix
+          if(!boundingBox.containsPoint(whereWasI)){
             // with friction behavior:
             // set particle to its previous position
             posFriction.copy(whereWasI);
