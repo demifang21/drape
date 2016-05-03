@@ -21,6 +21,16 @@
 				text-align: center;
 			}
 
+			#corner {
+				position: absolute;
+				padding: 10px;
+				bottom: 0;
+				right: 0;
+				width: 100%;
+				text-align: right;
+			}
+
+
 			a {
 				text-decoration: underline;
 				cursor: pointer;
@@ -37,6 +47,10 @@
 		<div id="info">Drape - a Cloth Simulator<br/>
 			<a onclick="wireFrame();">Wireframe</a> |
 			<a onclick="restartCloth();">Restart</a>
+		</div>
+
+		<div id="corner"><a href = "https://github.com/aatishb/drape">View Source</a>
+
 		</div>
 
 		<script src="js/three.min.js"></script>

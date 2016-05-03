@@ -30,9 +30,10 @@ var windStrength;
 var windForce = new THREE.Vector3( 0, 0, 0 );
 
 var rotate = false;
-var pinned = true;
+var pinned = 'corners';
 var thing = 'Ball';
 
+var cornersPinned, oneEdgePinned, twoEdgesPinned, fourEdgesPinned, randomEdgesPinned;
 
 if(guiEnabled){
 
@@ -45,8 +46,8 @@ if(guiEnabled){
     this.rotate = rotate;
 
     this.wind = wind;
-    this.pinned = pinned;
     this.thing = thing;
+    this.pinned = pinned;
 
     this.fabricLength = fabricLength;
     this.structuralSprings = structuralSprings;
@@ -75,10 +76,8 @@ if(guiEnabled){
 
   f4.add(guiControls, 'rotate').name('auto rotate').onChange(function(value){rotate = !rotate;});
   f4.add(guiControls, 'wind').name('wind').onChange(function(value){wind = !wind;});
-  f4.add(guiControls, 'pinned').name('pin corners').onChange(function(value){pinned = !pinned;});
   f4.add(guiControls, 'thing', ['None', 'Ball', 'Table']).name('object').onChange(function(value){createThing(value);});
-
-  //f4.add(text, 'Object', ['None', 'Sphere', 'Ball']);
+  f4.add(guiControls, 'pinned', ['corners', 'oneEdge', 'twoEdges','fourEdges','none']).name('pinned').onChange(function(value){pinCloth(value);});
 
   var f1 = gui.addFolder('Weave');
 
@@ -140,6 +139,67 @@ var a,b,c,d,e,f;
 var nearestX, nearestY, nearestZ;
 var currentX, currentY, currentZ;
 var xDist, yDist, zDist;
+var randomPoints = [];
+var rand, randX, randY;
+
+function pinCloth(choice){
+  if(choice == 'corners')
+  {
+    cornersPinned = true;
+    oneEdgePinned = false;
+    twoEdgesPinned = false;
+    fourEdgesPinned = false;
+    randomEdgesPinned = false;
+  }
+  else if(choice == 'oneEdge')
+  {
+    cornersPinned = false;
+    oneEdgePinned = true;
+    twoEdgesPinned = false;
+    fourEdgesPinned = false;
+    randomEdgesPinned = false;
+  }
+  else if(choice == 'twoEdges')
+  {
+    cornersPinned = false;
+    oneEdgePinned = false;
+    twoEdgesPinned = true;
+    fourEdgesPinned = false;
+    randomEdgesPinned = false;
+  }
+  else if(choice == 'fourEdges')
+  {
+    cornersPinned = false;
+    oneEdgePinned = false;
+    twoEdgesPinned = false;
+    fourEdgesPinned = true;
+    randomEdgesPinned = false;
+  }
+  else if(choice == 'random')
+  {
+    cornersPinned = false;
+    oneEdgePinned = false;
+    twoEdgesPinned = false;
+    fourEdgesPinned = false;
+    randomEdgesPinned = true;
+
+    rand = Math.round(Math.random()*10)+1;
+    randomPoints = [];
+    for (u=0;u<rand;u++){
+      randX = Math.round(Math.random()*xSegs);
+      randY = Math.round(Math.random()*ySegs);
+      randomPoints.push([randX,randY]);
+    }
+  }
+  else if(choice == 'none')
+  {
+    cornersPinned = false;
+    oneEdgePinned = false;
+    twoEdgesPinned = false;
+    fourEdgesPinned = false;
+    randomEdgesPinned = false;
+  }
+}
 
 function createThing(thing){
 
@@ -169,26 +229,6 @@ function createThing(thing){
 
 }
 
-function createBall(){
-  sphere.visible = !sphere.visible;
-  if(table.visible){table.visible = false;}
-  if(sphere.visible){restartCloth();}
-}
-
-function createTable(){
-
-  table.visible = !table.visible;
-  if(sphere.visible){sphere.visible = false;}
-  if(table.visible){
-    a = boundingBox.min.x;
-    b = boundingBox.min.y;
-    c = boundingBox.min.z;
-    d = boundingBox.max.x;
-    e = boundingBox.max.y;
-    f = boundingBox.max.z;
-    restartCloth();
-  }
-}
 
 function wireFrame(){
 
@@ -594,11 +634,47 @@ function simulate( time ) {
   }
 
   // Pin Constrains
-  if(pinned){
+  if(cornersPinned){
+    // could also do particles[blah].lock() which will lock particles to wherever they are, not to their original position
     particles[cloth.index(0,0)].lockToOriginal();
     particles[cloth.index(xSegs,0)].lockToOriginal();
     particles[cloth.index(0,ySegs)].lockToOriginal();
     particles[cloth.index(xSegs,ySegs)].lockToOriginal();
+  }
+
+  else if(oneEdgePinned){
+   for (u=0;u<=xSegs;u++)
+   {
+    particles[cloth.index(u,0)].lockToOriginal();
+   }
+  }
+
+  else if(twoEdgesPinned){
+   for (u=0;u<=xSegs;u++)
+   {
+    particles[cloth.index(0,u)].lockToOriginal();
+    particles[cloth.index(xSegs,u)].lockToOriginal();
+   }
+  }
+
+  else if(fourEdgesPinned){
+   for (u=0;u<=xSegs;u++)
+   {
+    particles[cloth.index(0,u)].lockToOriginal();
+    particles[cloth.index(xSegs,u)].lockToOriginal();
+    particles[cloth.index(u,0)].lockToOriginal();
+    particles[cloth.index(u,xSegs)].lockToOriginal();
+   }
+  }
+
+  else if(randomEdgesPinned)
+  {
+   for (u=0;u<randomPoints.length;u++){
+    rand = randomPoints[u];
+    randX = rand[0];
+    randY = rand[1];
+    particles[cloth.index(randX,randY)].lockToOriginal();
+   }
   }
 
 }

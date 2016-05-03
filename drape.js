@@ -229,14 +229,13 @@ function init() {
 
 	window.addEventListener( 'resize', onWindowResize, false );
 
-	// start off with the sphere and table invisible
-	sphere.visible = false;
-	table.visible = false;
 
-	// createBall and createTable are functions which tell the cloth to watch out for collisions with the ball or table
+	// some initial conditions here
+
+	// createThing is a function that creates objects the cloth can collide into
 	createThing('Ball');
-	//createBall();
-	//createTable(); // we'll start the scene off with a table for the cloth to collide into
+	// pinCloth sets how the cloth is pinned
+	pinCloth('corners');
 
 }
 
