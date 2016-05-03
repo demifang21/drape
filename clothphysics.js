@@ -76,7 +76,7 @@ if(guiEnabled){
 
   var f0 = gui.add(guiControls, 'fabricLength', 200, 1000).step(20).name('Size').onChange(function(value){fabricLength = value; xSegs = Math.round(value/20); ySegs = Math.round(value/20); restartCloth();});
 
-  var f4 = gui.addFolder('Interactions')
+  var f4 = gui.addFolder('Interaction')
 
   f4.add(guiControls, 'rotate').name('auto rotate').onChange(function(value){rotate = value;});
   f4.add(guiControls, 'wind').name('wind').onChange(function(value){wind = value;});
