@@ -2,7 +2,7 @@
 A [fabric design and simulation tool](https://gitcdn.xyz/repo/aatishb/drape/master/index.html), built in [three.js](http://threejs.org/).
 
 ## Change log
-- May 2: added options for cloth pinned constraints
+- May 2: added multiple options for pinned constraints, option to avoid cloth self-intersections (very slow!)
 - April 27: collision detection speedup (abandoned ray-tracing)
 - April 12: improved collision detection, more intuitive GUI controls, made objects transparent
 - April 5: added sliders GUI, mouse control (scroll to zoom, drag mouse to change view)
