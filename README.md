@@ -2,7 +2,8 @@
 A [fabric design and simulation tool](https://gitcdn.xyz/repo/aatishb/drape/master/index.html), built in [three.js](http://threejs.org/).
 
 ## Change log
-- April 27: optimized collision detection (order of magnitude speedup by getting rid of raytracing)
+- May 2: added options for cloth pinned constraints
+- April 27: collision detection speedup (abandoned ray-tracing)
 - April 12: improved collision detection, more intuitive GUI controls, made objects transparent
 - April 5: added sliders GUI, mouse control (scroll to zoom, drag mouse to change view)
 - March 22: added shear & bending springs, collision detection, friction, wireframe view
