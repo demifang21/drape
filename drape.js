@@ -284,7 +284,6 @@ function restartCloth()
 }
 
 // the rendering happens here
-// creates a loop that causes the rendere to draw the scene 60 times a second
 function render() {
 
 	var timer = Date.now() * 0.0002;

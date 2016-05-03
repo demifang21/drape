@@ -35,6 +35,8 @@ var thing = 'Ball';
 
 var cornersPinned, oneEdgePinned, twoEdgesPinned, fourEdgesPinned, randomEdgesPinned;
 
+var avoidClothSelfIntersection = false;
+
 if(guiEnabled){
 
   // GUI controls
@@ -48,6 +50,8 @@ if(guiEnabled){
     this.wind = wind;
     this.thing = thing;
     this.pinned = pinned;
+
+    this.avoidClothSelfIntersection = avoidClothSelfIntersection;
 
     this.fabricLength = fabricLength;
     this.structuralSprings = structuralSprings;
@@ -72,24 +76,21 @@ if(guiEnabled){
 
   var f0 = gui.add(guiControls, 'fabricLength', 200, 1000).step(20).name('Size').onChange(function(value){fabricLength = value; xSegs = Math.round(value/20); ySegs = Math.round(value/20); restartCloth();});
 
-  var f4 = gui.addFolder('Behavior')
+  var f4 = gui.addFolder('Interactions')
 
-  f4.add(guiControls, 'rotate').name('auto rotate').onChange(function(value){rotate = !rotate;});
-  f4.add(guiControls, 'wind').name('wind').onChange(function(value){wind = !wind;});
+  f4.add(guiControls, 'rotate').name('auto rotate').onChange(function(value){rotate = value;});
+  f4.add(guiControls, 'wind').name('wind').onChange(function(value){wind = value;});
   f4.add(guiControls, 'thing', ['None', 'Ball', 'Table']).name('object').onChange(function(value){createThing(value);});
   f4.add(guiControls, 'pinned', ['corners', 'oneEdge', 'twoEdges','fourEdges','none']).name('pinned').onChange(function(value){pinCloth(value);});
 
-  var f1 = gui.addFolder('Weave');
+  var f1 = gui.addFolder('Behavior');
 
   f1.add(guiControls, 'structuralSprings').name('cross grain').onChange(function(value){structuralSprings = value; restartCloth();});
   f1.add(guiControls, 'shearSprings').name('bias grain').onChange(function(value){shearSprings = value; restartCloth();});
   f1.add(guiControls, 'bendingSprings').name('drape').onChange(function(value){bendingSprings = value; restartCloth();});
-
-  var f2 = gui.addFolder('Physics');
-
-  f2.add(guiControls, 'friction', 0, 1).onChange(function(value){friction = value;});
-  //f2.add(guiControls, 'weight', 0, 500).step(1).onChange(function(value){weight = value; restartCloth();});
-
+  f1.add(guiControls, 'avoidClothSelfIntersection').name('selfintersections').onChange(function(value){avoidClothSelfIntersection = value;});
+  f1.add(guiControls, 'friction', 0, 1).onChange(function(value){friction = value;});
+  //f1.add(guiControls, 'weight', 0, 500).step(1).onChange(function(value){weight = value; restartCloth();});
 
   var f3 = gui.addFolder('Colors');
   f3.addColor(guiControls, 'clothColor').name('cloth color').onChange(function(value){clothMaterial.color.setHex(value);});
@@ -242,10 +243,6 @@ function plane( width, height ) {
 
   return function( u, v ) {
 
-    //var x = u * width - width/2;
-    //var y = v * height + height/2;
-    //var z = 0;
-
     var x = u * width - width/2;
     var y = 125; //height/2;
     var z = v * height - height/2;
@@ -260,7 +257,7 @@ function Particle( x, y, z, mass ) {
 
   this.position = clothInitialPosition( x, y ); // position
   this.previous = clothInitialPosition( x, y ); // previous
-  this.original = clothInitialPosition( x, y );
+  this.original = clothInitialPosition( x, y ); // original
   this.a = new THREE.Vector3( 0, 0, 0 ); // acceleration
   this.mass = mass;
   this.invMass = 1 / mass;
@@ -319,6 +316,20 @@ function satisifyConstrains( p1, p2, distance) {
   var correctionHalf = correction.multiplyScalar( 0.5 );
   p1.position.add( correctionHalf );
   p2.position.sub( correctionHalf );
+
+}
+
+function repelParticles( p1, p2, distance) {
+
+  diff.subVectors( p2.position, p1.position );
+  var currentDist = diff.length();
+  if ( currentDist == 0 ) return; // prevents division by 0
+  if (currentDist < distance){
+    var correction = diff.multiplyScalar( (currentDist - distance) / currentDist);
+    var correctionHalf = correction.multiplyScalar( 0.5 );
+    p1.position.add( correctionHalf );
+    p2.position.sub( correctionHalf );
+  }
 
 }
 
@@ -527,102 +538,112 @@ function simulate( time ) {
     satisifyConstrains( constrain[ 0 ], constrain[ 1 ], constrain[ 2 ], constrain[ 3] );
   }
 
-    prevBallPosition.copy(ballPosition);
-    ballPosition.y = 50*Math.sin(Date.now()/600);
-    ballPosition.x = 50*Math.sin(Date.now()/600);
-    ballPosition.z = 50*Math.cos(Date.now()/600);
-    sphere.position.copy( ballPosition ); //maybe remove this since it's also in render()
 
-    for ( particles = cloth.particles, i = 0, il = particles.length; i < il; i ++ )
-    {
+  prevBallPosition.copy(ballPosition);
+  ballPosition.y = 50*Math.sin(Date.now()/600);
+  ballPosition.x = 50*Math.sin(Date.now()/600);
+  ballPosition.z = 50*Math.cos(Date.now()/600);
+  sphere.position.copy( ballPosition ); //maybe remove this since it's also in render()
 
-      particle = particles[ i ];
-      whereAmI = particle.position;
-      whereWasI = particle.previous;
-
-      // check to see if point is inside sphere
-      if(sphere.visible){
-
-        diff.subVectors( whereAmI, ballPosition );
-        if ( diff.length() < ballSize ) {
-          // if yes, we've collided, so take correcting action
-
-          // no friction behavior:
-          // project point out to nearest point on sphere surface
-          diff.normalize().multiplyScalar( ballSize );
-          posNoFriction.copy( ballPosition ).add( diff );
-
-          diff.subVectors(whereWasI,ballPosition);
-
-          if (diff.length() > ballSize) {
-            // with friction behavior:
-            // add the distance that the sphere moved in the last frame
-            // to the previous position of the particle
-            diff.subVectors(ballPosition,prevBallPosition);
-            posFriction.copy(whereWasI).add(diff);
-
-            posNoFriction.multiplyScalar(1-friction);
-            posFriction.multiplyScalar(friction);
-            whereAmI.copy(posFriction.add(posNoFriction));
-          }
-          else{
-            whereAmI.copy(posNoFriction);
-          }
-        }
+  if(avoidClothSelfIntersection){
+    for ( i = 0; i < particles.length; i ++ ){
+      p_i = particles[i];
+      for ( j = 0; j < particles.length; j ++ ){
+        p_j = particles[j];
+        repelParticles(p_i,p_j,restDistance);
       }
-
-      // check to see if point is inside table
-      if(table.visible){
-        if(boundingBox.containsPoint(whereAmI)){
-          // if yes, we've collided, so take correcting action
-
-          // no friction behavior:
-          // place point at the nearest point on the surface of the cube
-          currentX = whereAmI.x;
-          currentY = whereAmI.y;
-          currentZ = whereAmI.z;
-
-          if(currentX <= (a + d)/2){nearestX = a;}
-          else{nearestX = d;}
-
-          if(currentY <= (b + e)/2){nearestY = b;}
-          else{nearestY = e;}
-
-          if(currentZ <= (c + f)/2){nearestZ = c;}
-          else{nearestZ = f;}
-
-          xDist = Math.abs(nearestX-currentX);
-          yDist = Math.abs(nearestY-currentY);
-          zDist = Math.abs(nearestZ-currentZ);
-
-          posNoFriction.copy(whereAmI);
-
-          if(zDist<=xDist && zDist<=yDist)
-          {
-            posNoFriction.z = nearestZ;
-          }
-          else if(yDist<=xDist && yDist<=zDist)
-          {
-            posNoFriction.y = nearestY;
-          }
-          else if(xDist<=yDist && xDist<=zDist)
-          {
-            posNoFriction.x = nearestX;
-          }
-
-          if(!boundingBox.containsPoint(whereWasI)){
-            // with friction behavior:
-            // set particle to its previous position
-            posFriction.copy(whereWasI);
-            whereAmI.copy(posFriction.multiplyScalar(friction).add(posNoFriction.multiplyScalar(1-friction)));
-          }
-          else{
-            whereAmI.copy(posNoFriction);
-          }
-        }
-      }
-
     }
+  }
+
+  for ( particles = cloth.particles, i = 0, il = particles.length; i < il; i ++ )
+  {
+
+    particle = particles[ i ];
+    whereAmI = particle.position;
+    whereWasI = particle.previous;
+
+    // check to see if point is inside sphere
+    if(sphere.visible){
+
+      diff.subVectors( whereAmI, ballPosition );
+      if ( diff.length() < ballSize ) {
+        // if yes, we've collided, so take correcting action
+
+        // no friction behavior:
+        // project point out to nearest point on sphere surface
+        diff.normalize().multiplyScalar( ballSize );
+        posNoFriction.copy( ballPosition ).add( diff );
+
+        diff.subVectors(whereWasI,ballPosition);
+
+        if (diff.length() > ballSize) {
+          // with friction behavior:
+          // add the distance that the sphere moved in the last frame
+          // to the previous position of the particle
+          diff.subVectors(ballPosition,prevBallPosition);
+          posFriction.copy(whereWasI).add(diff);
+
+          posNoFriction.multiplyScalar(1-friction);
+          posFriction.multiplyScalar(friction);
+          whereAmI.copy(posFriction.add(posNoFriction));
+        }
+        else{
+          whereAmI.copy(posNoFriction);
+        }
+      }
+    }
+
+    // check to see if point is inside table
+    if(table.visible){
+      if(boundingBox.containsPoint(whereAmI)){
+        // if yes, we've collided, so take correcting action
+
+        // no friction behavior:
+        // place point at the nearest point on the surface of the cube
+        currentX = whereAmI.x;
+        currentY = whereAmI.y;
+        currentZ = whereAmI.z;
+
+        if(currentX <= (a + d)/2){nearestX = a;}
+        else{nearestX = d;}
+
+        if(currentY <= (b + e)/2){nearestY = b;}
+        else{nearestY = e;}
+
+        if(currentZ <= (c + f)/2){nearestZ = c;}
+        else{nearestZ = f;}
+
+        xDist = Math.abs(nearestX-currentX);
+        yDist = Math.abs(nearestY-currentY);
+        zDist = Math.abs(nearestZ-currentZ);
+
+        posNoFriction.copy(whereAmI);
+
+        if(zDist<=xDist && zDist<=yDist)
+        {
+          posNoFriction.z = nearestZ;
+        }
+        else if(yDist<=xDist && yDist<=zDist)
+        {
+          posNoFriction.y = nearestY;
+        }
+        else if(xDist<=yDist && xDist<=zDist)
+        {
+          posNoFriction.x = nearestX;
+        }
+
+        if(!boundingBox.containsPoint(whereWasI)){
+          // with friction behavior:
+          // set particle to its previous position
+          posFriction.copy(whereWasI);
+          whereAmI.copy(posFriction.multiplyScalar(friction).add(posNoFriction.multiplyScalar(1-friction)));
+        }
+        else{
+          whereAmI.copy(posNoFriction);
+        }
+      }
+    }
+  }
 
   // Floor Constains
   for ( particles = cloth.particles, i = 0, il = particles.length
