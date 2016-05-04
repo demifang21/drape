@@ -235,7 +235,7 @@ function init() {
 	// createThing is a function that creates objects the cloth can collide into
 	createThing('Ball');
 	// pinCloth sets how the cloth is pinned
-	pinCloth('corners');
+	pinCloth('Corners');
 
 }
 

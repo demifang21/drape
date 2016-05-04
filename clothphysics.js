@@ -30,7 +30,7 @@ var windStrength;
 var windForce = new THREE.Vector3( 0, 0, 0 );
 
 var rotate = false;
-var pinned = 'corners';
+var pinned = 'Corners';
 var thing = 'Ball';
 
 var cornersPinned, oneEdgePinned, twoEdgesPinned, fourEdgesPinned, randomEdgesPinned;
@@ -81,18 +81,18 @@ if(guiEnabled){
   f4.add(guiControls, 'rotate').name('auto rotate').onChange(function(value){rotate = value;});
   f4.add(guiControls, 'wind').name('wind').onChange(function(value){wind = value;});
   f4.add(guiControls, 'thing', ['None', 'Ball', 'Table']).name('object').onChange(function(value){createThing(value);});
-  f4.add(guiControls, 'pinned', ['corners', 'oneEdge', 'twoEdges','fourEdges','none']).name('pinned').onChange(function(value){pinCloth(value);});
+  f4.add(guiControls, 'pinned', ['None','Corners', 'OneEdge', 'TwoEdges','FourEdges']).name('pinned').onChange(function(value){pinCloth(value);});
 
   var f1 = gui.addFolder('Behavior');
 
   f1.add(guiControls, 'structuralSprings').name('cross grain').onChange(function(value){structuralSprings = value; restartCloth();});
   f1.add(guiControls, 'shearSprings').name('bias grain').onChange(function(value){shearSprings = value; restartCloth();});
   f1.add(guiControls, 'bendingSprings').name('drape').onChange(function(value){bendingSprings = value; restartCloth();});
-  f1.add(guiControls, 'avoidClothSelfIntersection').name('selfintersections').onChange(function(value){avoidClothSelfIntersection = value;});
   f1.add(guiControls, 'friction', 0, 1).onChange(function(value){friction = value;});
+  f1.add(guiControls, 'avoidClothSelfIntersection').name('NoSelfIntersect').onChange(function(value){avoidClothSelfIntersection = value;});
   //f1.add(guiControls, 'weight', 0, 500).step(1).onChange(function(value){weight = value; restartCloth();});
 
-  var f3 = gui.addFolder('Colors');
+  var f3 = gui.addFolder('Appearance');
   f3.addColor(guiControls, 'clothColor').name('cloth color').onChange(function(value){clothMaterial.color.setHex(value);});
   f3.addColor(guiControls, 'clothSpecular').name('cloth reflection').onChange(function(value){clothMaterial.specular.setHex(value);});
   f3.addColor(guiControls, 'groundColor').name('ground color').onChange(function(value){groundMaterial.color.setHex(value);});
@@ -144,7 +144,7 @@ var randomPoints = [];
 var rand, randX, randY;
 
 function pinCloth(choice){
-  if(choice == 'corners')
+  if(choice == 'Corners')
   {
     cornersPinned = true;
     oneEdgePinned = false;
@@ -152,7 +152,7 @@ function pinCloth(choice){
     fourEdgesPinned = false;
     randomEdgesPinned = false;
   }
-  else if(choice == 'oneEdge')
+  else if(choice == 'OneEdge')
   {
     cornersPinned = false;
     oneEdgePinned = true;
@@ -160,7 +160,7 @@ function pinCloth(choice){
     fourEdgesPinned = false;
     randomEdgesPinned = false;
   }
-  else if(choice == 'twoEdges')
+  else if(choice == 'TwoEdges')
   {
     cornersPinned = false;
     oneEdgePinned = false;
@@ -168,7 +168,7 @@ function pinCloth(choice){
     fourEdgesPinned = false;
     randomEdgesPinned = false;
   }
-  else if(choice == 'fourEdges')
+  else if(choice == 'FourEdges')
   {
     cornersPinned = false;
     oneEdgePinned = false;
@@ -176,7 +176,7 @@ function pinCloth(choice){
     fourEdgesPinned = true;
     randomEdgesPinned = false;
   }
-  else if(choice == 'random')
+  else if(choice == 'Random')
   {
     cornersPinned = false;
     oneEdgePinned = false;
@@ -192,7 +192,7 @@ function pinCloth(choice){
       randomPoints.push([randX,randY]);
     }
   }
-  else if(choice == 'none')
+  else if(choice == 'None')
   {
     cornersPinned = false;
     oneEdgePinned = false;
